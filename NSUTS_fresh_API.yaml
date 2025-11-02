@@ -1,0 +1,395 @@
+openapi: 3.1.0
+info:
+  title: NSUTS Fresh API
+  version: master
+servers:
+  - url: https://fresh.nsuts.ru/nsuts-new/api
+paths:
+  /login:
+    post:
+      summary: Authorize
+      description: Returns authorization cookie for credentials
+      requestBody:
+        description: Credentials pair
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: student@g.nsu.ru
+                method:
+                  type: string
+                  enum:
+                    - internal
+                  default: internal
+                password:
+                  type: string
+                  default: mypassword123
+      responses:
+        '200':
+          description: |
+            By default, means successful authorization without responsse body.
+            If authorization failed, will response 200 too, see response body.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    default: false
+                  error:
+                    type: string
+                    default: "Email or password is incorrect."
+          headers:
+            Set-Cookie:
+              schema:
+                description: CGISESSID Authorization cookie
+                type: string
+  /olympiads/list:
+    get:
+      summary: Get list of olympiads
+      description: Returns list of available olympiads for student
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successful fetch
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registeredTo:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Olympiad'
+                        - type: object
+                          properties:
+                            frozen:
+                              type: boolean
+                              default: true
+                  canRegisterTo:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Olympiad'
+                        - type: object
+                          properties:
+                            hasInvite:
+                              type: boolean
+                              default: false
+  /common/system_data:
+    get:
+      security:
+        - cookieAuth: []
+      description: |
+        Returns current server-side state.
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - user
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  olympiad:
+                    type: object
+                    required:
+                      - id
+                      - title
+                    properties:
+                      id:
+                        type: number
+                        default: 52
+                      title:
+                        type: string
+                        default: "Питон для детей"
+                      teams_allowed:
+                        type: string
+                        default: "0"
+                      invitations_allowed:
+                        type: string
+                        default: "0"
+                      team:
+                        type: number
+                        default: 300
+                      teamTitle:
+                        type: string
+                        default: "Dream Team"
+                  tour:
+                    type: object
+                    required: 
+                      - id
+                      - title
+                    properties:
+                      id:
+                        type: number
+                        default: 14641
+                      title:
+                        type: string
+                        default: "Набор задач 0"
+                      modelCode:
+                        type: number
+                        default: 1
+  /tours/enter:
+    get:
+      security:
+        - cookieAuth: []      
+      description: Save current selected tour in server-side state.
+      parameters:
+        - name: tour
+          in: query
+          schema:
+            type: number
+  /common/hint_data:
+    get:
+      description: Returns info about invitations and notifications.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  usersCount:
+                    type: string
+                    default: "0"
+                  news:
+                    type: object
+                    properties:
+                      posts:
+                        type: array
+                  invitations:
+                    type: object
+                    properties:
+                      invitations:
+                        type: array
+                  notifications:
+                    type: array
+  /notifications/latest:
+    post:
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successful
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tour
+                - timestamp
+              properties:
+                tour:
+                  type: number
+                  default: 1337
+                timestamp:
+                  type: number
+                  default: 172800
+                notifications:
+                  type: array
+  /news/page_info:
+    get:
+      security:
+        - cookieAuth: []
+      description: Returns service info about tour and tasks of this tour.
+      responses:
+        '200':
+          description: Successful
+          content:
+            applications/json:
+              schema:
+                type: object
+                required:
+                  - tourTitle
+                  - startDate
+                  - opened
+                  - statements
+                properties:
+                  tourTitle:
+                    type: string
+                    default:  "Набор задач 0"
+                  infoText:
+                    type: string
+                    default: ""
+                  tourModel:
+                    type: string
+                    default: "1"
+                  startDate:
+                    type: string
+                    default: "19.04.2025 00:00:00"
+                  freezeDate:
+                    type: string # ??
+                    default: null
+                  endDate:
+                    type: string # ??
+                    default: null
+                  opened:
+                    type: string
+                    default: "1"
+                  statementsShowMode:
+                    type: string
+                    default: "2"
+                  elapsedTime:
+                    type: string
+                    default: "268241"
+                  statements:
+                    type: object
+                    required:
+                      - forTour
+                      - forTasks
+                    properties:
+                      forTour:
+                        type: object
+                        required:
+                          - id
+                          - text
+                        properties:
+                          id:
+                            type: string
+                            default: "2575"
+                          text:
+                            type: string
+                            default: "Условия задач"
+                      forTasks:
+                        type: array
+                  news:
+                    type: array
+  /news/tour_statement:
+  # type = document 
+    get:
+      security:
+        - cookieAuth: []
+      description: PDF-file with statements for tasks of current tour.
+      parameters:
+        - name: id
+          in: query
+          schema: 
+            type: number
+  /submit/submit_info:
+    get:
+      description: Returns available compilers, tasks and count of remaining tryings.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successful
+          content:
+            applications/json:
+              schema:
+                type: object
+                required:
+                  - langs
+                  - tasks
+                properties:
+                  tourTime:
+                    type: number
+                    default: -29083260
+                  elapsedTime:
+                    type: number
+                    default: 268452
+                  isEnabled: 
+                    type: number
+                    default: 1
+                  queueModel:
+                    type: number
+                    default: 0
+                  isInfinite:
+                    type: number
+                    default: 1
+                  langs:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - title
+                      properties:
+                        id:
+                          type: string
+                          default: "mingw8.1c"
+                        title:
+                          type: string
+                          default: "MinGW64 C 8.1"
+                  tasks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          default: "119370"
+                        title:
+                          type: string
+                          default: "2. Время в Калифорнии"
+components:
+  securitySchemes:
+    cookieAuth:
+     type: apiKey
+     in: cookie
+     name: CGISESSID
+     description: CGI Session ID
+  schemas:
+    Olympiad:
+      type: object
+      required:
+        - id
+        - title
+        - tours
+      properties:
+        id:
+          type: string
+          default: "42"
+        title:
+          type: string
+          default: "\u041f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435"
+        teams:
+          type: string
+          default: "80"
+        tours:
+          type: string
+          default: "20"
+        cover_url:
+          type: string
+          default: "\/nsuts-new\/nsuts_img\/covers\/training.png"
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - surname
+        - name
+        - patronymic
+        - permissions
+      properties:
+        id:
+          type: number
+          default: 1337
+        email:
+          type: string
+          default: "student@g.nsu.ru"
+        surname:
+          type: string
+          default: "Иванов"
+        name:
+          type: string
+          default: "Иван"
+        patronymic:
+          type: string
+          default: "Иванович"
+        permissions:
+          type: object
+
