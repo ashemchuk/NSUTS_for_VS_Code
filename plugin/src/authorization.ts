@@ -173,8 +173,6 @@ export async function enterOlympiad(context: vscode.ExtensionContext, olympiadId
         httpsAgent,
       }
     );
-
-    console.log('Enter olympiad response:', JSON.stringify(response.data));
     return response.data.entered === true;
   } catch (error: any) {
     console.error('Error entering olympiad:', error);
