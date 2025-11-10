@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as vscode from 'vscode';
 import axios from 'axios';
 import https from 'https';
