@@ -1,13 +1,11 @@
 import * as vscode from 'vscode';
-import { NsutsViewProvider } from './interface';
-import { ProviderManager } from './providerManager';
-import { getTasks, getOlympiads, enterOlympiad, getTours, enterTour } from './authorization';
+import { NsutsViewProvider } from './handlers/viewProvider';
+import { getTasks } from './autorization/tasks'
+import { getOlympiads, enterOlympiad, getTours, enterTour } from './autorization/olimpiads';
 
 export function activate(context: vscode.ExtensionContext) {
     const provider = new NsutsViewProvider(context.extensionUri, context);
     
-    ProviderManager.getInstance().setProvider(provider);
-
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
             NsutsViewProvider.viewType,
