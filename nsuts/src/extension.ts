@@ -1,10 +1,17 @@
 import * as vscode from "vscode";
 
-import helloWorldHandler from "./commands/helloWorld";
+import { TaskTreeDataProvider } from "./views/taskTreeView";
+import { registerAuthMiddleware } from "./api/client";
+import { getAuthHandler } from "./commands/auth";
 
 export function activate(context: vscode.ExtensionContext) {
-    context.subscriptions.push(
-        vscode.commands.registerCommand("nsuts.helloWorld", helloWorldHandler)
+    registerAuthMiddleware(context);
+
+    vscode.commands.registerCommand("nsuts.auth", getAuthHandler(context));
+
+    vscode.window.registerTreeDataProvider(
+        "task-tree",
+        new TaskTreeDataProvider()
     );
 }
 

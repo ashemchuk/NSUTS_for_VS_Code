@@ -115,6 +115,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tours/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get list of olympiad's tours
+         * @description Returns list of available olympiad's tours for student
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful fetch */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tours?: {
+                                /** @default 11388 */
+                                id: string;
+                                /** @default 1 */
+                                isOpened: string;
+                                /** @default 11376 */
+                                position: string;
+                                /** @default Вводный тур */
+                                title: string;
+                                /** @default 1 */
+                                tourModel: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/common/system_data": {
         parameters: {
             query?: never;
@@ -197,6 +249,40 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/olympiads/enter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Save current selected olympiads in server-side state. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Credentials pair */
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @default 196 */
+                        olympiad?: string;
+                    };
+                };
+            };
+            responses: never;
+        };
         delete?: never;
         options?: never;
         head?: never;

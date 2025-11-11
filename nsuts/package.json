@@ -14,21 +14,29 @@
   "contributes": {
     "commands": [
       {
-        "command": "nsuts.helloWorld",
-        "title": "Hello World"
+        "command": "nsuts.auth",
+        "title": "NSUTS: Auth"
       }
     ],
-    "configuration": {
-      "title": "NSUTS",
-      "type": "object",
-      "properties": {
-        "nsuts.email": {
-          "type": "string"
-        },
-        "nsuts.password": {
-          "type": "string"
+    "viewsContainers": {
+        "activitybar": [
+          {
+            "id": "nsuts",
+            "title": "NSUTS",
+            "icon": "resources/nsuts-icon-light.svg"
+          }
+        ]
+    },
+    "views": {
+      "nsuts":[
+        {
+          "id": "task-tree",
+          "name": "Olympiads & Tours & Tasks",
+          "icon": "resources/nsuts-icon-light.svg",
+          "contextualTitle": "NSUTS",
+          "visibility": "collapsed"
         }
-      }
+      ]
     }
   },
   "scripts": {

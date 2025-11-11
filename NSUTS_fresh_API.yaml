@@ -82,6 +82,40 @@ paths:
                             hasInvite:
                               type: boolean
                               default: false
+  /tours/list:
+    get:
+      summary: Get list of olympiad's tours
+      description: Returns list of available olympiad's tours for student
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successful fetch
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tours:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          default: "11388"
+                        isOpened:
+                          type: string
+                          default: "1"
+                        position:
+                          type: string
+                          default: "11376"
+                        title:
+                          type: string
+                          default: "Вводный тур"
+                        tourModel:
+                          type: string
+                          default: "1"
   /common/system_data:
     get:
       security:
@@ -149,6 +183,21 @@ paths:
           in: query
           schema:
             type: number
+  /olympiads/enter:
+    post:
+      security:
+        - cookieAuth: []      
+      description: Save current selected olympiads in server-side state.
+      requestBody:
+        description: Credentials pair
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                olympiad:
+                  type: string
+                  default: "196"
   /common/hint_data:
     get:
       description: Returns info about invitations and notifications.
