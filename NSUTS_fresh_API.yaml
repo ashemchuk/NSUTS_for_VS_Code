@@ -335,6 +335,97 @@ paths:
                         title:
                           type: string
                           default: "2. Время в Калифорнии"
+  /submit/do_submit:
+    post:
+      description: "Send solution text."
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successful
+      requestBody:
+        content:
+          multipart/form-data:
+            encoding:
+              sourceFile:
+                style: form
+            schema:
+              type: object
+              properties:
+                langId:
+                  type: string
+                  default: "mingw8.1c"
+                taskId:
+                  type: string
+                  default: "119370"
+                sourceText:
+                  type: string
+                  nullable: true
+                  default: ""
+                sourceFile:
+                  type: string
+                  format: binary
+                  nullable: true
+              
+  /report/get_report:
+    get:
+      description: "Getting report of all solutions."
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successful
+          content:
+            applications/json:
+              schema:
+                type: object
+                properties:
+                  display_time_and_memory:
+                    type: string
+                    default: "1"
+                  model_code:
+                    type: number
+                    default: 1
+                  submits:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        compiler:
+                          type: string
+                          default: "MinGW64 C 8.1"
+                        date:
+                          type: string
+                          default: "2025-04-28 23:51:56"
+                        id:
+                          type: string
+                          default: "681895"
+                        points:
+                          type: string # i dunno
+                        result_line:
+                          type: string
+                          default: "AAAAW"
+                        status:
+                          type: string
+                          default: "4"
+                        taskModel:
+                          type: string
+                          default: "ICPC"
+                        task_id:
+                          type: string
+                          default: "119370"
+                        task_title:
+                          type: string
+                          default: "2. Время в Калифорнии"
+                        testNumber:
+                          type: string # i dunno
+                        time_and_memory:
+                          type: object
+                          default: "{\"1\":{\"t\":0,\"m\":0}}"
+                        total:
+                          type: string # i dunno
+                        
+
 components:
   securitySchemes:
     cookieAuth:
