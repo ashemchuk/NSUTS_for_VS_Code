@@ -182,7 +182,7 @@ export class HomeTemplate {
             }
 
             .primary-btn {
-                background-color: var(--vscode-button-background);
+                background-color: green;
                 color: var(--vscode-button-foreground);
                 border: none;
                 border-radius: var(--border-radius);
@@ -199,8 +199,8 @@ export class HomeTemplate {
 
             .secondary-btn {
                 background-color: transparent;
-                color: var(--vscode-button-secondaryForeground);
-                border: 1px solid var(--vscode-button-border);
+                color: #d45d3fff;
+                border: 1px solid var(--vscode-panel-border);
                 border-radius: var(--border-radius);
                 padding: 8px 16px;
                 font-size: 12px;
