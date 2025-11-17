@@ -16,6 +16,11 @@
       {
         "command": "nsuts.auth",
         "title": "NSUTS: Auth"
+      }, 
+      {
+        "command": "nsuts.submit",
+        "title": "NSUTS: Submit",
+        "icon": "$(beaker)"
       }
     ],
     "viewsContainers": {
@@ -35,6 +40,15 @@
           "icon": "resources/nsuts-icon-light.svg",
           "contextualTitle": "NSUTS",
           "visibility": "collapsed"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "nsuts.submit",
+          "when": "true",
+          "group": "navigation"
         }
       ]
     }
