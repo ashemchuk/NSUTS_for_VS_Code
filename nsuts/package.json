@@ -51,7 +51,25 @@
           "group": "inline"
       }
     ]
-    }
+    },
+    "configuration":[
+      {
+        "title": "NSUTS settings",
+        "properties": {
+          "nsuts.active_task": {
+            "type": "object",
+            "properties": {
+              "taskId":{
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

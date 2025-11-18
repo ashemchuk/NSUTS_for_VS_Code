@@ -1,11 +1,20 @@
 import * as vscode from "vscode";
 
 import { client } from "../api/client";
+import { TaskTreeItem } from "../views/taskTreeView";
 
 export function getSelectTaskHandler(context: vscode.ExtensionContext) {
-    return function (taskItem: any) {
-        const taskId = taskItem.taskId;
-        if (taskId) {
+    return async function (taskItem?: TaskTreeItem) {
+        if (!taskItem) {
+            // TODO
+            vscode.window.showInformationMessage(
+                "TODO: command was invoked directly or via shortcut"
+            );
+            return;
         }
+        const { taskId, name } = taskItem;
+        const config = vscode.workspace.getConfiguration("nsuts");
+        await config.update("active_task", { taskId, name });
+        // TODO selected task in status bar
     };
 }
