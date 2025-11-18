@@ -16,6 +16,11 @@
       {
         "command": "nsuts.auth",
         "title": "NSUTS: Auth"
+      },
+      {
+        "command": "nsuts.select_task",
+        "title": "NSUTS: Select task",
+        "icon": "$(add)"
       }
     ],
     "viewsContainers": {
@@ -37,6 +42,15 @@
           "visibility": "collapsed"
         }
       ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "nsuts.select_task",
+          "when": "view == task-tree && viewItem == task",
+          "group": "inline"
+      }
+    ]
     }
   },
   "scripts": {

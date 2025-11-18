@@ -40,6 +40,7 @@ class TaskTreeItem extends TreeItem {
         public readonly name: string
     ) {
         super(name, TreeItemCollapsibleState.None);
+        this.contextValue = "task";
     }
 }
 
