@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 import { client } from "../api/client";
 import { TaskTreeItem } from "../views/taskTreeView";
+import { updateActiveTaskStatus } from "../statusBar/activeTask";
 
 export function getSelectTaskHandler(context: vscode.ExtensionContext) {
     return async function (taskItem?: TaskTreeItem) {
@@ -16,5 +17,6 @@ export function getSelectTaskHandler(context: vscode.ExtensionContext) {
         const config = vscode.workspace.getConfiguration("nsuts");
         await config.update("active_task", { taskId, name });
         // TODO selected task in status bar
+        updateActiveTaskStatus(context);
     };
 }
