@@ -12,7 +12,7 @@ class OlympiadTreeItem extends TreeItem {
     constructor(
         public readonly olympiadId: string,
         public readonly name: string,
-        // public readonly registred: boolean,
+        // public readonly registered: boolean,
         // public readonly frozen: boolean,
         public readonly coverUrl: string
     ) {
@@ -34,12 +34,13 @@ class TourTreeItem extends TreeItem {
     }
 }
 
-class TaskTreeItem extends TreeItem {
+export class TaskTreeItem extends TreeItem {
     constructor(
         public readonly taskId: string,
         public readonly name: string
     ) {
         super(name, TreeItemCollapsibleState.None);
+        this.contextValue = "task";
     }
 }
 
