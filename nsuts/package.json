@@ -6,9 +6,7 @@
   "engines": {
     "vscode": "^1.105.0"
   },
-  "categories": [
-    "Other"
-  ],
+  "categories": ["Other"],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -16,24 +14,29 @@
       {
         "command": "nsuts.auth",
         "title": "NSUTS: Auth"
-      }, 
+      },
       {
         "command": "nsuts.submit",
         "title": "NSUTS: Submit",
         "icon": "$(beaker)"
+      },
+      {
+        "command": "nsuts.select_task",
+        "title": "NSUTS: Select task",
+        "icon": "$(add)"
       }
     ],
     "viewsContainers": {
-        "activitybar": [
-          {
-            "id": "nsuts",
-            "title": "NSUTS",
-            "icon": "resources/nsuts-icon-light.svg"
-          }
-        ]
+      "activitybar": [
+        {
+          "id": "nsuts",
+          "title": "NSUTS",
+          "icon": "resources/nsuts-icon-light.svg"
+        }
+      ]
     },
     "views": {
-      "nsuts":[
+      "nsuts": [
         {
           "id": "task-tree",
           "name": "Olympiads & Tours & Tasks",
@@ -50,8 +53,33 @@
           "when": "true",
           "group": "navigation"
         }
+      ],
+      "view/item/context": [
+        {
+          "command": "nsuts.select_task",
+          "when": "view == task-tree && viewItem == task",
+          "group": "inline"
+        }
       ]
-    }
+    },
+    "configuration": [
+      {
+        "title": "NSUTS settings",
+        "properties": {
+          "nsuts.active_task": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
