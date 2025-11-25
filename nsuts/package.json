@@ -6,7 +6,9 @@
   "engines": {
     "vscode": "^1.105.0"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -24,6 +26,10 @@
         "command": "nsuts.select_task",
         "title": "NSUTS: Select task",
         "icon": "$(add)"
+      },
+      {
+        "command": "nsuts.select_files",
+        "title": "NSUTS: Select files"
       }
     ],
     "viewsContainers": {
@@ -104,6 +110,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "openapi-fetch": "^0.15.0"
   }
 }
