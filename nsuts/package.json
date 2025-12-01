@@ -82,6 +82,17 @@
                 "type": "string"
               }
             }
+          },
+          "nsuts.selected_files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fsPath": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }

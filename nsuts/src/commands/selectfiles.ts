@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
 import * as path from 'path';
-import { client } from "../api/client";
-import { fileState } from "../state";
 
 export function getSelectFilesHandler() {
     return async () => {
@@ -19,8 +17,10 @@ export function getSelectFilesHandler() {
         });
 
         if (selected && selected.length > 0) {
-            const selectedUris = selected.map(item => item.fileUri);
-            fileState.setCurrentSelection(selectedUris);
+            const config = vscode.workspace.getConfiguration("nsuts");
+            await config.update("selected_files", selected.map(item => ({
+                fsPath: item.fileUri.fsPath,
+            })));
 
             if (selected.length == 1) {
                 vscode.window.showInformationMessage(`Выбран 1 файл: ${selected[0]?.label}`);
@@ -29,7 +29,9 @@ export function getSelectFilesHandler() {
                     ${selected.map(s => s.label).join(', ')}`);
             }
         } else {
-            fileState.clearSelection();
+            const config = vscode.workspace.getConfiguration("nsuts");
+            await config.update("selected_files", undefined);
+            
             vscode.window.showInformationMessage('Файлы не выбраны');
         }
     }
