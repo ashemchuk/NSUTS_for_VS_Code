@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import { TasksContext } from "../types";
 
 export function getSelectFilesHandler() {
     return async () => {
@@ -26,13 +27,14 @@ export function getSelectFilesHandler() {
             ignoreFocusOut: true,
         });
 
-        const prev =
-            config.get<Record<string, Array<string>>>("selected_files") || {};
+        const tasksContext = config.get<TasksContext>("tasks_context") || {};
+        const curContext = tasksContext[activeTask.taskId];
         if (selected) {
-            prev[activeTask.taskId] = selected.map(
-                (item) => item.fileUri.fsPath
-            );
+            tasksContext[activeTask.taskId] = {
+                ...curContext,
+                files: selected.map((item) => item.fileUri.fsPath),
+            };
+            await config.update("tasks_context", tasksContext);
         }
-        config.update("selected_files", prev);
     };
 }

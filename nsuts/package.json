@@ -110,12 +110,20 @@
               }
             }
           },
-          "nsuts.selected_files": {
+          "nsuts.tasks_context": {
             "type": "object",
             "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
+              "type": "object",
+              "required": ["files"],
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": "string",
+                  "default": []
+                },
+                "compiler": {
+                  "type": "string"
+                }
               }
             }
           }
