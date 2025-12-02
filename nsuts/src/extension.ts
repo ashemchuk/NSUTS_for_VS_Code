@@ -4,10 +4,11 @@ import { TaskTreeDataProvider } from "./views/taskTreeView";
 import { registerAuthMiddleware } from "./api/client";
 import { getAuthHandler } from "./commands/auth";
 import { getSubmitHandler } from "./commands/submit";
-
+import { getSelectFilesHandler } from "./commands/selectFiles";
 import { getSelectTaskHandler } from "./commands/selectTask";
 import { updateActiveTaskStatus } from "./statusBar/activeTask";
 import { getLogoutHandler } from "./commands/logout";
+
 export function activate(context: vscode.ExtensionContext) {
     registerAuthMiddleware(context);
 
@@ -25,10 +26,17 @@ export function activate(context: vscode.ExtensionContext) {
             keys.includes("nsuts.email") && keys.includes("nsuts.password")
         );
     });
+
+    vscode.commands.registerCommand(
+        "nsuts.select_files",
+        getSelectFilesHandler()
+    );
+
     vscode.window.registerTreeDataProvider(
         "task-tree",
         new TaskTreeDataProvider()
     );
+
     updateActiveTaskStatus(context);
 }
 
