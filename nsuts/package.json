@@ -84,13 +84,11 @@
             }
           },
           "nsuts.selected_files": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "fsPath": {
-                  "type": "string"
-                }
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
             }
           }
