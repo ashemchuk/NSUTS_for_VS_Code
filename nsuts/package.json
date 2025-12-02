@@ -52,7 +52,8 @@
           "name": "Olympiads & Tours & Tasks",
           "icon": "resources/nsuts-icon-light.svg",
           "contextualTitle": "NSUTS",
-          "visibility": "collapsed"
+          "visibility": "collapsed",
+          "when": "nsuts.authorized"
         }
       ]
     },
@@ -86,6 +87,10 @@
         },
         {
           "command": "nsuts.select_task",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_files",
           "when": "nsuts.authorized"
         }
       ]
