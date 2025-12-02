@@ -20,7 +20,7 @@ export function registerAuthMiddleware(context: ExtensionContext) {
             return request;
         },
         async onResponse({ response }) {
-            if (response.status === 400) {
+            if (400 <= response.status && response.status < 500) {
                 let email = await context.secrets.get("nsuts.email");
                 let password = await context.secrets.get("nsuts.password");
 
@@ -31,6 +31,7 @@ export function registerAuthMiddleware(context: ExtensionContext) {
                 }
                 const cookie = await getAuthCookie(email, password);
                 await context.secrets.store("nsuts.cookie", cookie);
+                //TODO: authorized retry
             }
         },
     };
