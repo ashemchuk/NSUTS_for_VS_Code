@@ -28,6 +28,10 @@
         "icon": "$(add)"
       },
       {
+        "command": "nsuts.logout",
+        "title": "NSUTS: Log out"
+      },
+      {
         "command": "nsuts.select_files",
         "title": "NSUTS: Select files"
       }
@@ -65,6 +69,24 @@
           "command": "nsuts.select_task",
           "when": "view == task-tree && viewItem == task",
           "group": "inline"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "nsuts.auth",
+          "when": "!nsuts.authorized"
+        },
+        {
+          "command": "nsuts.logout",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.submit",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_task",
+          "when": "nsuts.authorized"
         }
       ]
     },
