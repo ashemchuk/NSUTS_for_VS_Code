@@ -18,10 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
         getSelectTaskHandler(context)
     );
     
-    vscode.commands.registerCommand("nsuts.select_files", async () => {
-        const handler = getSelectFilesHandler();
-        await handler();
-    });
+    vscode.commands.registerCommand("nsuts.select_files", getSelectFilesHandler());
 
     vscode.window.registerTreeDataProvider(
         "task-tree",
