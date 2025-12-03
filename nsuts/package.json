@@ -37,8 +37,7 @@
       },
       {
         "command": "nsuts.select_compiler",
-        "title": "NSUTS: Select compiler",
-        "icon": "$(refresh)"
+        "title": "NSUTS: Select compiler"
       }
     ],
     "viewsContainers": {
