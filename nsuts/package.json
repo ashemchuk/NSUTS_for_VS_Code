@@ -84,8 +84,7 @@
           },
           "nsuts.active_compiler": {
             "type": "string",
-            "default": "",
-            "description": "Selected compiler for NSUTS extension"
+            "default": ""
           }
         }
       }
