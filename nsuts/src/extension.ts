@@ -9,9 +9,14 @@ import { getSelectTaskHandler } from "./commands/selectTask";
 import { updateActiveTaskStatus } from "./statusBar/activeTask";
 import { getLogoutHandler } from "./commands/logout";
 
+import { getSelectCompilerHandler } from "./commands/selectCompiler";
 export function activate(context: vscode.ExtensionContext) {
     registerAuthMiddleware(context);
 
+    vscode.commands.registerCommand(
+        "nsuts.select_compiler",
+        getSelectCompilerHandler(context)
+    );
     vscode.commands.registerCommand("nsuts.auth", getAuthHandler(context));
     vscode.commands.registerCommand("nsuts.submit", getSubmitHandler(context));
     vscode.commands.registerCommand(

@@ -34,6 +34,11 @@
       {
         "command": "nsuts.select_files",
         "title": "NSUTS: Select files"
+      },
+      {
+        "command": "nsuts.select_compiler",
+        "title": "NSUTS: Select compiler",
+        "icon": "$(refresh)"
       }
     ],
     "viewsContainers": {
