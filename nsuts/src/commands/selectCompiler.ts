@@ -17,9 +17,8 @@ export async function getCompilers(tourId: string) {
 
 export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
     return async function () {
-        const activeTask = vscode.workspace.getConfiguration().get("nsuts.active_task") as any;
-
-
+        const config = vscode.workspace.getConfiguration("nsuts");
+        const activeTask = config.get("active_task") as any;
         if (!activeTask?.taskId) {
             vscode.window.showWarningMessage("Сначала выберите задание!");
             return;
@@ -46,7 +45,6 @@ export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
 
         if (!selected) return;
 
-        const config = vscode.workspace.getConfiguration("nsuts");
         await config.update("active_compiler",selected.description, vscode.ConfigurationTarget.Global);
 
         vscode.window.showInformationMessage(
