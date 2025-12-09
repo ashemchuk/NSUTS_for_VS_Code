@@ -6,7 +6,9 @@
   "engines": {
     "vscode": "^1.105.0"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -28,6 +30,14 @@
       {
         "command": "nsuts.select_compiler",
         "title": "NSUTS: Select compiler"
+      },
+      {
+        "command": "nsuts.logout",
+        "title": "NSUTS: Log out"
+      },
+      {
+        "command": "nsuts.select_files",
+        "title": "NSUTS: Select files"
       }
     ],
     "viewsContainers": {
@@ -46,7 +56,8 @@
           "name": "Olympiads & Tours & Tasks",
           "icon": "resources/nsuts-icon-light.svg",
           "contextualTitle": "NSUTS",
-          "visibility": "collapsed"
+          "visibility": "collapsed",
+          "when": "nsuts.authorized"
         }
       ]
     },
@@ -63,6 +74,28 @@
           "command": "nsuts.select_task",
           "when": "view == task-tree && viewItem == task",
           "group": "inline"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "nsuts.auth",
+          "when": "!nsuts.authorized"
+        },
+        {
+          "command": "nsuts.logout",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.submit",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_task",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_files",
+          "when": "nsuts.authorized"
         }
       ]
     },
@@ -84,6 +117,23 @@
           "nsuts.active_compiler": {
             "type": "string",
             "default": ""
+          },
+          "nsuts.tasks_context": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["files"],
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": "string",
+                  "default": []
+                },
+                "compiler": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -112,6 +162,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "openapi-fetch": "^0.15.0"
   }
 }
