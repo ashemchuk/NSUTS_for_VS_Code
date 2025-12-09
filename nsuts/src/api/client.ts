@@ -2,6 +2,7 @@ import createClient, { Middleware } from "openapi-fetch";
 
 import type { paths } from "./api";
 import { ExtensionContext } from "vscode";
+import { getAuthCookie, getAuthData, getAuthHandler } from "../commands/auth";
 
 export const client = createClient<paths>({
     baseUrl: "https://fresh.nsuts.ru/nsuts-new/api/",
@@ -17,6 +18,21 @@ export function registerAuthMiddleware(context: ExtensionContext) {
             }
 
             return request;
+        },
+        async onResponse({ response }) {
+            if (400 <= response.status && response.status < 500) {
+                let email = await context.secrets.get("nsuts.email");
+                let password = await context.secrets.get("nsuts.password");
+
+                if (!email || !password) {
+                    const data = await getAuthData();
+                    email = data.email;
+                    password = data.password;
+                }
+                const cookie = await getAuthCookie(email, password);
+                await context.secrets.store("nsuts.cookie", cookie);
+                //TODO: authorized retry
+            }
         },
     };
 

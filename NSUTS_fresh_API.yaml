@@ -473,7 +473,14 @@ paths:
                           default: "{\"1\":{\"t\":0,\"m\":0}}"
                         total:
                           type: string # i dunno
-                        
+  /logout:
+    post:
+      description: "Logging out of NSUTS"
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: "Successful"
 
 components:
   securitySchemes:
