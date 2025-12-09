@@ -28,6 +28,10 @@
         "icon": "$(add)"
       },
       {
+        "command": "nsuts.select_compiler",
+        "title": "NSUTS: Select compiler"
+      },
+      {
         "command": "nsuts.logout",
         "title": "NSUTS: Log out"
       },
@@ -109,6 +113,10 @@
                 "type": "string"
               }
             }
+          },
+          "nsuts.active_compiler": {
+            "type": "string",
+            "default": ""
           },
           "nsuts.tasks_context": {
             "type": "object",
