@@ -451,9 +451,11 @@ paths:
                           default: "681895"
                         points:
                           type: string # i dunno
+                        # A - accepted, W - wrong answer, T - time limit exceeded, R - run-time error, M - memory limit exceeded, C - compile error, P - presentation error
                         result_line:
                           type: string
                           default: "AAAAW"
+                        # 1 - queued, 3 - successful, 4 - unsuccessful
                         status:
                           type: string
                           default: "4"

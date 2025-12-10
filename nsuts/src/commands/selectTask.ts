@@ -13,10 +13,14 @@ export function getSelectTaskHandler(context: vscode.ExtensionContext) {
             );
             return;
         }
-        const { taskId, name } = taskItem;
+        const { taskId, name, olympiadId, tourId } = taskItem;
         const config = vscode.workspace.getConfiguration("nsuts");
-        await config.update("active_task", { taskId, name });
-        // TODO selected task in status bar
+        await config.update("active_task", {
+            taskId,
+            name,
+            olympiadId,
+            tourId,
+        });
         updateActiveTaskStatus(context);
     };
 }

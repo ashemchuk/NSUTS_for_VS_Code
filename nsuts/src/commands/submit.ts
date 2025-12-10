@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { client } from "../api/client";
 import { getSelectTaskHandler } from "./selectTask";
-import { TasksContext } from "../types";
+import { ActiveTask, TasksContext } from "../types";
+import { updateSolutionResultStatus } from "../statusBar/solutionResult";
 
 export function getSubmitHandler(context: vscode.ExtensionContext) {
     return async function () {
@@ -11,14 +12,10 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
         }
         const config = vscode.workspace.getConfiguration("nsuts");
         // if (!auth)
-        let activeTask = config.get<{ taskId: string; name: string }>(
-            "active_task"
-        );
+        let activeTask = config.get<ActiveTask>("active_task");
         if (!activeTask) {
             await vscode.commands.executeCommand("nsuts.select_task");
-            activeTask = config.get<{ taskId: string; name: string }>(
-                "active_task"
-            )!;
+            activeTask = config.get<ActiveTask>("active_task")!;
         }
         // if (!compiler)
 
@@ -57,5 +54,36 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
         } else {
             //TODO: multiple files sending
         }
+        setTimeout(() => getReport(activeTask), 5000);
     };
+}
+
+async function getReport(activeTask: ActiveTask) {
+    await client.POST("/olympiads/enter", {
+        body: { olympiad: activeTask.olympiadId },
+    });
+    await client.GET("/tours/enter", {
+        params: { query: { tour: Number(activeTask.tourId) } },
+    });
+    const res = await client.GET("/report/get_report");
+    if (!res.data && res.error) {
+        throw new Error("Couldn't fetch result");
+    }
+    const reports = res.data.submits;
+    if (!reports || reports.length < 1) {
+        // throw
+        await vscode.window.showErrorMessage("There're not any reports");
+        return;
+    }
+    const report = reports
+        .filter((rep) => rep.task_id === activeTask.taskId)
+        .reduce((acc, cur) => (Number(acc.id) > Number(cur.id) ? acc : cur));
+    if (report.status === "4") {
+        //unsuccessful
+        updateSolutionResultStatus(report.result_line);
+    }
+    if (report.status === "3") {
+        // successful
+        updateSolutionResultStatus("Accepted!");
+    }
 }
