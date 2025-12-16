@@ -5,6 +5,8 @@ import { ActiveTask, TasksContext } from "../types";
 import { updateSolutionResultStatus } from "../statusBar/solutionResult";
 import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
 import { TasksContextRepository } from "../repositories/tasksContextRepository";
+import JSZip from "jszip";
+import * as path from "node:path";
 
 export function getSubmitHandler(context: vscode.ExtensionContext) {
     return async function () {
@@ -42,7 +44,7 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
         if (!compiler) {
             return;
         }
-        vscode.window.withProgress(
+        await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Задача проверяется...",
@@ -73,12 +75,42 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                         },
                     });
                 } else {
-                    //TODO: multiple files sending
+                    const zip = new JSZip();
+                    await Promise.all(
+                        files.map(async (file) => {
+                            const text = Buffer.from(
+                                await vscode.workspace.fs.readFile(
+                                    vscode.Uri.file(file)
+                                )
+                            );
+                            zip.file(path.basename(file), text);
+                        })
+                    );
+                    await client.POST("/submit/do_submit", {
+                        body: {
+                            langId: compiler,
+                            // @ts-ignore
+                            sourceFile: await zip.generateAsync({
+                                type: "blob",
+                            }),
+                            taskId: activeTask.taskId,
+                        },
+                        bodySerializer(body) {
+                            const fd = new FormData();
+                            if (!body) {
+                                return;
+                            }
+                            for (const [key, value] of Object.entries(body)) {
+                                fd.append(key, value);
+                            }
+                            return fd;
+                        },
+                    });
+
+                    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+                    await getReport(activeTask);
                 }
-
-                await new Promise((resolve) => setTimeout(resolve, 5000));
-
-                await getReport(activeTask);
             }
         );
     };
