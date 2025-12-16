@@ -35,7 +35,7 @@ export function getAuthHandler(context: vscode.ExtensionContext) {
         await context.secrets.store("nsuts.password", password);
         await context.secrets.store("nsuts.cookie", cookie);
 
-        await vscode.window.showInformationMessage(
+        vscode.window.showInformationMessage(
             "Authorization completed successful!"
         );
         await vscode.commands.executeCommand(

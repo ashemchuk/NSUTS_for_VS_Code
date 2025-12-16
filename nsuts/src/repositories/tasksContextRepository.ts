@@ -30,13 +30,14 @@ export class TasksContextRepository {
     ) {
         const oldContext =
             this.config.get<TasksContext>(TasksContextRepository.KEY) ?? {};
-
-        await this.config.update(TasksContextRepository.KEY, {
+        const newContext = {
             ...oldContext,
             [taskId]: {
                 ...this.getBlankTaskContext(),
                 ...updater(oldContext[taskId]),
             },
-        });
+        };
+        await this.config.update(TasksContextRepository.KEY, newContext);
+        return newContext;
     }
 }

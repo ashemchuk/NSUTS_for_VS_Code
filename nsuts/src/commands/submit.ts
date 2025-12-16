@@ -25,39 +25,40 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
             return;
         }
 
-        const taskContext = await tasksContextRepo.getTaskContext(
-            activeTask.taskId
-        );
+        const taskContext =
+            (await tasksContextRepo.getTaskContext(activeTask.taskId)) ??
+            (await vscode.commands.executeCommand("nsuts.select_files"));
         if (!taskContext) {
-            await vscode.window.showErrorMessage(
-                "No selected files for this task"
-            );
             return;
         }
+
         const {
             files,
             compiler = await vscode.commands.executeCommand(
                 "nsuts.select_compiler"
             ),
         } = taskContext;
-
         if (!compiler) {
             return;
         }
+
         await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: "Задача проверяется...",
             },
             async (process) => {
-                process.report({ increment: 0 });
+                const progressInterval = setInterval(
+                    () => process.report({ increment: 2.5 }),
+                    250
+                );
 
                 if (files.length === 1) {
                     const text = await vscode.workspace.fs.readFile(
                         vscode.Uri.file(files[0]!)
                     );
 
-                    await client.POST("/submit/do_submit", {
+                    const { error } = await client.POST("/submit/do_submit", {
                         body: {
                             langId: compiler,
                             sourceText: Buffer.from(text).toString("utf-8"),
@@ -74,6 +75,12 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                             return fd;
                         },
                     });
+
+                    if (error) {
+                        // @ts-ignore TODO: add 400 error in openapi spec
+                        vscode.window.showErrorMessage(error.error);
+                        return;
+                    }
                 } else {
                     const zip = new JSZip();
                     await Promise.all(
@@ -86,7 +93,7 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                             zip.file(path.basename(file), text);
                         })
                     );
-                    await client.POST("/submit/do_submit", {
+                    const { error } = await client.POST("/submit/do_submit", {
                         body: {
                             langId: compiler,
                             // @ts-ignore
@@ -107,10 +114,18 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                         },
                     });
 
-                    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-                    await getReport(activeTask);
+                    if (error) {
+                        // @ts-ignore TODO: add 400 error in openapi spec
+                        vscode.window.showErrorMessage(error.error);
+                        return;
+                    }
                 }
+
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+
+                await getReport(activeTask);
+
+                clearInterval(progressInterval);
             }
         );
     };
@@ -130,7 +145,7 @@ async function getReport(activeTask: ActiveTask) {
     const reports = res.data.submits;
     if (!reports || reports.length < 1) {
         // throw
-        await vscode.window.showErrorMessage("There're not any reports");
+        vscode.window.showErrorMessage("There're not any reports");
         return;
     }
     const report = reports

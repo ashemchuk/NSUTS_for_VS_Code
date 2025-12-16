@@ -10,7 +10,7 @@ export function getSelectTaskHandler(context: vscode.ExtensionContext) {
         taskItem?: TaskTreeItem
     ): Promise<ActiveTask | undefined> {
         if (!taskItem) {
-            await vscode.window.showInformationMessage(
+            vscode.window.showInformationMessage(
                 "DEBUG: if you see this, something fked up"
             );
             return;
@@ -21,7 +21,7 @@ export function getSelectTaskHandler(context: vscode.ExtensionContext) {
         const task: ActiveTask = { name, taskId, tourId, olympiadId };
 
         await activeTaskRepository.setActiveTask(task);
-        await vscode.window.showInformationMessage("Выбрана задача: " + name);
+        vscode.window.showInformationMessage("Выбрана задача: " + name);
         await renderActiveTaskStatus();
 
         return task;

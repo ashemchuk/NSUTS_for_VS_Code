@@ -30,19 +30,19 @@ export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
         const activeTask = await activeTaskRepo.getActiveTask();
 
         if (!activeTask?.taskId) {
-            await vscode.window.showWarningMessage("Сначала выберите задание!");
+            vscode.window.showWarningMessage("Сначала выберите задание!");
             return;
         }
 
         let compilers = await getCompilers(activeTask).catch(async (err) => {
-            await vscode.window.showErrorMessage(
+            vscode.window.showErrorMessage(
                 "Ошибка загрузки списка компиляторов: " + err.message
             );
             throw err;
         });
 
         if (!compilers || compilers.length === 0) {
-            await vscode.window.showErrorMessage("Нет доступных компиляторов.");
+            vscode.window.showErrorMessage("Нет доступных компиляторов.");
             return;
         }
 
@@ -59,7 +59,7 @@ export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
             (oldValue) => ({ ...oldValue, compiler: selected.description })
         );
 
-        await vscode.window.showInformationMessage(
+        vscode.window.showInformationMessage(
             `Компилятор выбран: ${selected.description}`
         );
 
