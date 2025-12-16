@@ -59,8 +59,10 @@ export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
             (oldValue) => ({ ...oldValue, compiler: selected.description })
         );
 
-        vscode.window.showInformationMessage(
+        await vscode.window.showInformationMessage(
             `Компилятор выбран: ${selected.description}`
         );
+
+        return selected.description;
     };
 }

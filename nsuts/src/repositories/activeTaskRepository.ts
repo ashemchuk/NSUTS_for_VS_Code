@@ -14,7 +14,7 @@ export class ActiveTaskRepository {
         return this.config.get<ActiveTask>(ActiveTaskRepository.KEY);
     }
 
-    async updateActiveTask(activeTask: ActiveTask) {
+    async setActiveTask(activeTask: ActiveTask) {
         await this.config.update(ActiveTaskRepository.KEY, activeTask);
     }
 }

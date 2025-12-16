@@ -16,15 +16,12 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
             return;
         }
 
-        // if (!auth)
-
-        let activeTask = await activeTaskRepo.getActiveTask();
+        let activeTask =
+            (await activeTaskRepo.getActiveTask()) ??
+            (await vscode.commands.executeCommand("nsuts.select_task"));
         if (!activeTask) {
-            await vscode.commands.executeCommand("nsuts.select_task");
-            activeTask = (await activeTaskRepo.getActiveTask())!;
+            return;
         }
-
-        // if (!compiler)
 
         const taskContext = await tasksContextRepo.getTaskContext(
             activeTask.taskId
@@ -35,34 +32,55 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
             );
             return;
         }
-        const { files, compiler = "mingw8.1c" } = taskContext;
+        const {
+            files,
+            compiler = await vscode.commands.executeCommand(
+                "nsuts.select_compiler"
+            ),
+        } = taskContext;
 
-        if (files.length === 1) {
-            const text = await vscode.workspace.fs.readFile(
-                vscode.Uri.file(files[0]!)
-            );
-
-            await client.POST("/submit/do_submit", {
-                body: {
-                    langId: compiler,
-                    sourceText: Buffer.from(text).toString("utf-8"),
-                    taskId: activeTask.taskId,
-                },
-                bodySerializer(body) {
-                    const fd = new FormData();
-                    if (!body) {
-                        return;
-                    }
-                    for (const [key, value] of Object.entries(body)) {
-                        fd.append(key, value);
-                    }
-                    return fd;
-                },
-            });
-        } else {
-            //TODO: multiple files sending
+        if (!compiler) {
+            return;
         }
-        setTimeout(() => getReport(activeTask), 5000);
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Задача проверяется...",
+            },
+            async (process) => {
+                process.report({ increment: 0 });
+
+                if (files.length === 1) {
+                    const text = await vscode.workspace.fs.readFile(
+                        vscode.Uri.file(files[0]!)
+                    );
+
+                    await client.POST("/submit/do_submit", {
+                        body: {
+                            langId: compiler,
+                            sourceText: Buffer.from(text).toString("utf-8"),
+                            taskId: activeTask.taskId,
+                        },
+                        bodySerializer(body) {
+                            const fd = new FormData();
+                            if (!body) {
+                                return;
+                            }
+                            for (const [key, value] of Object.entries(body)) {
+                                fd.append(key, value);
+                            }
+                            return fd;
+                        },
+                    });
+                } else {
+                    //TODO: multiple files sending
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+
+                await getReport(activeTask);
+            }
+        );
     };
 }
 
@@ -94,4 +112,7 @@ async function getReport(activeTask: ActiveTask) {
         // successful
         updateSolutionResultStatus("Accepted!");
     }
+    vscode.window.showInformationMessage(
+        "Результат по задаче " + activeTask.name + " : " + report.result_line
+    );
 }
