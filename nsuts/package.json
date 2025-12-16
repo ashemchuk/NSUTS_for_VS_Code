@@ -107,6 +107,12 @@
               },
               "name": {
                 "type": "string"
+              },
+              "olympiadId": {
+                "type": "string"
+              },
+              "tourId": {
+                "type": "string"
               }
             }
           },
