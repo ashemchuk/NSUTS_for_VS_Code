@@ -1,12 +1,19 @@
 import * as vscode from "vscode";
 
 import { client } from "../api/client";
+import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
+import { TasksContextRepository } from "../repositories/tasksContextRepository";
+import { ActiveTask } from "../types";
 
-export async function getCompilers(tourId: string) {
+export async function getCompilers({ tourId, olympiadId }: ActiveTask) {
+    await client.POST("/olympiads/enter", {
+        body: { olympiad: olympiadId },
+    });
+
     await client.GET("/tours/enter", {
         params: { query: { tour: Number(tourId) } },
     });
-        
+
     const { data } = await client.GET("/submit/submit_info");
 
     return data?.langs.map(({ id, title }) => ({
@@ -17,25 +24,25 @@ export async function getCompilers(tourId: string) {
 
 export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
     return async function () {
-        const config = vscode.workspace.getConfiguration("nsuts");
-        const activeTask = config.get("active_task") as any;
+        const activeTaskRepo = new ActiveTaskRepository();
+        const tasksContextRepo = new TasksContextRepository();
+
+        const activeTask = await activeTaskRepo.getActiveTask();
+
         if (!activeTask?.taskId) {
-            vscode.window.showWarningMessage("Сначала выберите задание!");
+            await vscode.window.showWarningMessage("Сначала выберите задание!");
             return;
         }
 
-        const tourId = activeTask.taskId;
-
-        let compilers;
-        try {
-            compilers = await getCompilers(tourId);
-        } catch (err: any) {
-            vscode.window.showErrorMessage("Ошибка загрузки списка компиляторов: " + err.message);
-            return;
-        }
+        let compilers = await getCompilers(activeTask).catch(async (err) => {
+            await vscode.window.showErrorMessage(
+                "Ошибка загрузки списка компиляторов: " + err.message
+            );
+            throw err;
+        });
 
         if (!compilers || compilers.length === 0) {
-            vscode.window.showErrorMessage("Нет доступных компиляторов.");
+            await vscode.window.showErrorMessage("Нет доступных компиляторов.");
             return;
         }
 
@@ -43,9 +50,14 @@ export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
             title: "Выберите компилятор",
         });
 
-        if (!selected) return;
+        if (!selected) {
+            return;
+        }
 
-        await config.update("active_compiler",selected.description, vscode.ConfigurationTarget.Global);
+        await tasksContextRepo.updateTaskContext(
+            activeTask.taskId,
+            (oldValue) => ({ ...oldValue, compiler: selected.description })
+        );
 
         vscode.window.showInformationMessage(
             `Компилятор выбран: ${selected.description}`

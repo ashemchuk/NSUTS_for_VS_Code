@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -91,10 +93,14 @@
         },
         {
           "command": "nsuts.select_task",
-          "when": "nsuts.authorized"
+          "when": "false"
         },
         {
           "command": "nsuts.select_files",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_compiler",
           "when": "nsuts.authorized"
         }
       ]

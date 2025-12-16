@@ -1,16 +1,17 @@
 import * as vscode from "vscode";
+import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
+
 const activeTaskItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right
 );
-export function updateActiveTaskStatus(context: vscode.ExtensionContext) {
-    const config = vscode.workspace.getConfiguration("nsuts");
-    if (config.has("active_task")) {
-        const task = config.get<{ taskId: string; name: string }>(
-            "active_task"
-        );
-        if (task) {
-            activeTaskItem.text = task?.name;
-        }
+
+export async function renderActiveTaskStatus() {
+    const repo = new ActiveTaskRepository();
+
+    const activeTask = await repo.getActiveTask();
+
+    if (activeTask) {
+        activeTaskItem.text = activeTask?.name;
     }
     if (activeTaskItem.text) {
         activeTaskItem.show();

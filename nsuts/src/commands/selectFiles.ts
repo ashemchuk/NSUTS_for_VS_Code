@@ -1,14 +1,15 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { TasksContext } from "../types";
+
+import { TasksContextRepository } from "../repositories/tasksContextRepository";
+import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
 
 export function getSelectFilesHandler() {
     return async () => {
-        const config = vscode.workspace.getConfiguration("nsuts");
-        const activeTask = config.get<{ taskId: string; name: string }>(
-            "active_task"
-        );
+        const tasksContextRepo = new TasksContextRepository();
+        const activeTaskRepo = new ActiveTaskRepository();
 
+        const activeTask = await activeTaskRepo.getActiveTask();
         if (!activeTask?.taskId) {
             vscode.window.showErrorMessage("Сначала выберите задачу!");
             return;
@@ -27,14 +28,14 @@ export function getSelectFilesHandler() {
             ignoreFocusOut: true,
         });
 
-        const tasksContext = config.get<TasksContext>("tasks_context") || {};
-        const curContext = tasksContext[activeTask.taskId];
         if (selected) {
-            tasksContext[activeTask.taskId] = {
-                ...curContext,
-                files: selected.map((item) => item.fileUri.fsPath),
-            };
-            await config.update("tasks_context", tasksContext);
+            await tasksContextRepo.updateTaskContext(
+                activeTask.taskId,
+                (oldValue) => ({
+                    ...oldValue,
+                    files: selected.map((item) => item.fileUri.fsPath),
+                })
+            );
         }
     };
 }

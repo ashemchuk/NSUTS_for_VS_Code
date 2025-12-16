@@ -3,24 +3,32 @@ import { client } from "../api/client";
 import { getSelectTaskHandler } from "./selectTask";
 import { ActiveTask, TasksContext } from "../types";
 import { updateSolutionResultStatus } from "../statusBar/solutionResult";
+import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
+import { TasksContextRepository } from "../repositories/tasksContextRepository";
 
 export function getSubmitHandler(context: vscode.ExtensionContext) {
     return async function () {
+        const activeTaskRepo = new ActiveTaskRepository();
+        const tasksContextRepo = new TasksContextRepository();
+
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
             return;
         }
-        const config = vscode.workspace.getConfiguration("nsuts");
+
         // if (!auth)
-        let activeTask = config.get<ActiveTask>("active_task");
+
+        let activeTask = await activeTaskRepo.getActiveTask();
         if (!activeTask) {
             await vscode.commands.executeCommand("nsuts.select_task");
-            activeTask = config.get<ActiveTask>("active_task")!;
+            activeTask = (await activeTaskRepo.getActiveTask())!;
         }
+
         // if (!compiler)
 
-        const tasksContext = config.get<TasksContext>("tasks_context") ?? {};
-        const taskContext = tasksContext[activeTask.taskId];
+        const taskContext = await tasksContextRepo.getTaskContext(
+            activeTask.taskId
+        );
         if (!taskContext) {
             await vscode.window.showErrorMessage(
                 "No selected files for this task"
