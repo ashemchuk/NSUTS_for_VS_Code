@@ -1,2 +1,5 @@
 node_modules/
 out/
+.wdio-vscode-service/
+.vscode-test/
+.env

@@ -130,7 +130,9 @@
             "type": "object",
             "additionalProperties": {
               "type": "object",
-              "required": ["files"],
+              "required": [
+                "files"
+              ],
               "properties": {
                 "files": {
                   "type": "array",
@@ -154,20 +156,30 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "codegen": "openapi-typescript ../NSUTS_fresh_API.yaml -o src/api/api.d.ts"
+    "codegen": "openapi-typescript ../NSUTS_fresh_API.yaml -o src/api/api.d.ts",
+    "wdio": "wdio run ./wdio.conf.ts"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
+    "@types/node": "^22.19.3",
     "@types/vscode": "^1.105.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
+    "@wdio/cli": "^9.21.1",
+    "@wdio/globals": "^9.17.0",
+    "@wdio/json-reporter": "^9.20.0",
+    "@wdio/local-runner": "^9.21.0",
+    "@wdio/mocha-framework": "^9.21.0",
+    "@wdio/spec-reporter": "^9.20.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9.36.0",
+    "expect-webdriverio": "^5.6.0",
     "openapi-typescript": "^7.10.1",
     "prettier": "^3.6.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wdio-vscode-service": "^6.1.4"
   },
   "dependencies": {
     "jszip": "^3.10.1",

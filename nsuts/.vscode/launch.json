@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Run Extension",
+			"name": "Run & Debug",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -16,6 +16,12 @@
 				"${workspaceFolder}/out/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"name": "Run & Debug all E2E",
+			"type": "node-terminal",
+			"command": "npm run wdio && printf '%s ' 'Press enter to continue' && read ans",
+			"request": "launch",
 		}
 	]
 }
