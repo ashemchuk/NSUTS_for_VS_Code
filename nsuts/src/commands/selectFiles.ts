@@ -14,16 +14,39 @@ export function getSelectFilesHandler() {
             vscode.window.showErrorMessage("Сначала выберите задачу!");
             return;
         }
-        const curContext = await tasksContextRepo.getTaskContext(
+
+        const taskContext = await tasksContextRepo.getTaskContext(
             activeTask.taskId
         );
+
         const files = vscode.workspace.findFiles("**/*");
-        const items = (await files).sort().map((file) => ({
+        const items = (await files).map((file) => ({
             label: path.basename(file.fsPath),
             description: file.fsPath,
             fileUri: file,
-            picked: curContext?.files.includes(file.fsPath),
+            picked: Boolean(taskContext?.files.includes(file.fsPath)),
         }));
+
+        const activeFile = items.find((item) => {
+            return (
+                item.fileUri.fsPath ===
+                vscode.window.activeTextEditor?.document.uri.fsPath
+            );
+        });
+        if (activeFile) {
+            activeFile.picked = true;
+        }
+
+        items.sort((a, b) => {
+            if (a.picked && !b.picked) {
+                return -1;
+            }
+            if (!a.picked && b.picked) {
+                return 1;
+            }
+
+            return a.description.localeCompare(b.description);
+        });
 
         const selected = await vscode.window.showQuickPick(items, {
             canPickMany: true,

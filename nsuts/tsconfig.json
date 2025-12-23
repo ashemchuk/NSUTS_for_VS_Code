@@ -1,10 +1,9 @@
 {
 	"compilerOptions": {
 		"types": [
-            "node",
-            // "webdriverio/async",
+			"node",
+			"@wdio/globals/types",
             "@wdio/mocha-framework",
-            "expect-webdriverio",
             "wdio-vscode-service"
         ],
 		"module": "nodenext",
@@ -16,6 +15,7 @@
 		"lib": [
 			"ES2022"
 		],
+		"rootDir": "./",
 		"sourceMap": true,
 		"strict": true,   /* enable all strict type-checking options */
 		"noUncheckedIndexedAccess": true,
@@ -24,5 +24,6 @@
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
 		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
 	},
-	"include": ["src", "test"],
+	"include": ["./src/**/*"],
+	"exclude": ["./test/**/*"]
 }

@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
+import JSZip from "jszip";
+import * as path from "node:path";
+
 import { client } from "../api/client";
-import { getSelectTaskHandler } from "./selectTask";
 import { ActiveTask, TasksContext } from "../types";
 import { updateSolutionResultStatus } from "../statusBar/solutionResult";
 import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
 import { TasksContextRepository } from "../repositories/tasksContextRepository";
-import JSZip from "jszip";
-import * as path from "node:path";
 
 export function getSubmitHandler(context: vscode.ExtensionContext) {
     return async function () {
@@ -20,21 +20,25 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
 
         let activeTask =
             (await activeTaskRepo.getActiveTask()) ??
-            (await vscode.commands.executeCommand("nsuts.select_task"));
+            (await vscode.commands.executeCommand<ActiveTask>(
+                "nsuts.select_task"
+            ));
         if (!activeTask) {
             return;
         }
 
-        const taskContext =
+        let taskContext =
             (await tasksContextRepo.getTaskContext(activeTask.taskId)) ??
-            (await vscode.commands.executeCommand("nsuts.select_files"));
+            (await vscode.commands
+                .executeCommand<TasksContext>("nsuts.select_files")
+                .then((tasks) => tasks[activeTask.taskId]));
         if (!taskContext) {
             return;
         }
 
         const {
             files,
-            compiler = await vscode.commands.executeCommand(
+            compiler = await vscode.commands.executeCommand<string>(
                 "nsuts.select_compiler"
             ),
         } = taskContext;
@@ -144,7 +148,6 @@ async function getReport(activeTask: ActiveTask) {
     }
     const reports = res.data.submits;
     if (!reports || reports.length < 1) {
-        // throw
         vscode.window.showErrorMessage("There're not any reports");
         return;
     }
