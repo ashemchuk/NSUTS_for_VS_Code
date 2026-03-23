@@ -6,14 +6,19 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.panels.VerticalLayout
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.runBlocking
 import ru.ashemchuk.nsutsintellij.api.ApiClient
+import ru.ashemchuk.nsutsintellij.api.TaskTreeModel
+import ru.ashemchuk.nsutsintellij.api.TaskTreeCellRenderer
 import javax.swing.JButton
+import javax.swing.JTree
 import javax.swing.SwingConstants
+import javax.swing.tree.DefaultTreeModel
 
 class NsutsToolWindowFactory : ToolWindowFactory {
     private val logger = Logger.getInstance(NsutsToolWindowFactory::class.java)
@@ -30,6 +35,11 @@ class NsutsToolWindowFactory : ToolWindowFactory {
 
     class MyToolWindow(private val project: Project, private val apiClient: ApiClient) {
         private val logger = Logger.getInstance(MyToolWindow::class.java)
+        private val taskTreeModel = TaskTreeModel(apiClient)
+        private val taskTree = JTree(taskTreeModel).apply {
+            isRootVisible = false
+            cellRenderer = TaskTreeCellRenderer()
+        }
 
         private val content = JBPanel<JBPanel<*>>(VerticalLayout(JBUI.scale(10))).apply {
             border = JBUI.Borders.empty(20, 15, 15, 15)
@@ -84,11 +94,6 @@ class NsutsToolWindowFactory : ToolWindowFactory {
                 horizontalAlignment = SwingConstants.CENTER
             }
 
-            val descriptionLabel = JBLabel("You are logged in. Task tree will appear here.").apply {
-                font = JBFont.regular()
-                horizontalAlignment = SwingConstants.CENTER
-            }
-
             val logoutButton = JButton("Logout").apply {
                 addActionListener {
                     runBlocking {
@@ -99,11 +104,13 @@ class NsutsToolWindowFactory : ToolWindowFactory {
             }
 
             val refreshButton = JButton("Refresh").apply {
-                // TODO: refresh task tree
+                addActionListener {
+                    taskTreeModel.refresh()
+                }
             }
 
             content.add(titleLabel)
-            content.add(descriptionLabel)
+            content.add(JBScrollPane(taskTree))
             content.add(JBPanel<JBPanel<*>>().apply {
                 add(logoutButton)
                 add(refreshButton)

@@ -14,6 +14,8 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import ru.ashemchuk.nsutsintellij.api.LoginRequest
+import ru.ashemchuk.nsutsintellij.api.EnterOlympiadRequest
 
 /**
  * NSUTS API client.
@@ -105,7 +107,7 @@ class ApiClient {
             setPassword(null)
             setCookie(null)
         }
-        client.post("/logout")
+        client.post("logout")
         logger.info("Logged out")
     }
 
@@ -133,86 +135,41 @@ class ApiClient {
         return if (response.status.isSuccess()) response.body() else null
     }
 
-    // Specific API calls (placeholder)
+    // Specific API calls
     suspend fun getOlympiads(): List<Olympiad>? {
-        val response: ApiResponseOlympiads? = get("/olympiads/list")
+        val response: ApiResponseOlympiads? = get("olympiads/list")
         return response?.registeredTo?.map { it.toOlympiad() }
     }
 
     suspend fun getTours(): List<Tour>? {
-        val response: ApiResponseTours? = get("/tours/list")
+        val response: ApiResponseTours? = get("tours/list")
         return response?.tours?.map { it.toTour() }
     }
 
     suspend fun enterOlympiad(olympiadId: String) {
-        post<Unit>("/olympiads/enter", EnterOlympiadRequest(olympiad = olympiadId))
+        post<Unit>("olympiads/enter", EnterOlympiadRequest(olympiad = olympiadId))
     }
 
     suspend fun enterTour(tourId: Int) {
-        get<Unit>("/tours/enter", mapOf("tour" to tourId))
+        get<Unit>("tours/enter", mapOf("tour" to tourId))
     }
 
     suspend fun getSubmitInfo(): SubmitInfo? {
-        return get("/submit/submit_info")
+        return get("submit/submit_info")
+    }
+    
+    suspend fun getTasks(olympiadId: String, tourId: String): List<Task>? {
+        // Enter the tour to set it as the current tour on the server
+        enterTour(tourId.toInt())
+        // Get the submit info which contains the tasks
+        val submitInfo = getSubmitInfo()
+        // Convert ApiTask to Task with olympiadId and tourId
+        return submitInfo?.tasks?.map { apiTask ->
+            Task(apiTask.id, apiTask.title, olympiadId, tourId)
+        }
     }
 
     suspend fun submitSolution(taskId: String, langId: String, sourceText: String? = null, sourceFile: ByteArray? = null) {
-        // TODO: implement multipart/form-data submission
-    }
+       // TODO: implement multipart/form-data submission
+   }
 }
-
-// Request/Response data classes
-@kotlinx.serialization.Serializable
-data class LoginRequest(
-    val email: String,
-    val password: String,
-    val method: String = "internal"
-)
-
-@kotlinx.serialization.Serializable
-data class EnterOlympiadRequest(val olympiad: String)
-
-@kotlinx.serialization.Serializable
-data class ApiResponseOlympiads(
-    val registeredTo: List<ApiOlympiad>? = null,
-    val canRegisterTo: List<ApiOlympiad>? = null
-)
-
-@kotlinx.serialization.Serializable
-data class ApiOlympiad(
-    val id: String,
-    val title: String,
-    val teams: String,
-    val tours: String,
-    val cover_url: String,
-    val frozen: Boolean? = null,
-    val hasInvite: Boolean? = null
-) {
-    fun toOlympiad(): Olympiad = Olympiad(id, title, cover_url)
-}
-
-@kotlinx.serialization.Serializable
-data class ApiResponseTours(val tours: List<ApiTour>? = null)
-
-@kotlinx.serialization.Serializable
-data class ApiTour(
-    val id: String,
-    val title: String,
-    val isOpened: String,
-    val position: String,
-    val tourModel: String
-) {
-    fun toTour(): Tour = Tour(id, title)
-}
-
-@kotlinx.serialization.Serializable
-data class SubmitInfo(
-    val langs: List<Lang>,
-    val tasks: List<ApiTask>
-)
-
-@kotlinx.serialization.Serializable
-data class Lang(val id: String, val title: String)
-
-@kotlinx.serialization.Serializable
-data class ApiTask(val id: String, val title: String)

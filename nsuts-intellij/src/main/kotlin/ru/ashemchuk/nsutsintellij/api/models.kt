@@ -75,3 +75,64 @@ data class Report(
     val points: String? = null,
     val total: String? = null
 )
+
+// API Response data classes
+
+@Serializable
+data class ApiResponseOlympiads(
+    val registeredTo: List<ApiOlympiad>? = null,
+    val canRegisterTo: List<ApiOlympiad>? = null
+)
+
+@Serializable
+data class ApiOlympiad(
+    val id: String,
+    val title: String,
+    val teams: String,
+    val tours: String,
+    val cover_url: String,
+    val frozen: Boolean? = null,
+    val hasInvite: Boolean? = null
+) {
+    fun toOlympiad(): Olympiad = Olympiad(id, title, cover_url)
+}
+
+@Serializable
+data class ApiResponseTours(val tours: List<ApiTour>? = null)
+
+@Serializable
+data class ApiTour(
+    val id: String,
+    val title: String,
+    val isOpened: String,
+    val position: String,
+    val tourModel: String
+) {
+    fun toTour(): Tour = Tour(id, title)
+}
+
+@Serializable
+data class SubmitInfo(
+    val langs: List<Lang>,
+    val tasks: List<ApiTask>
+)
+
+@Serializable
+data class Lang(val id: String, val title: String)
+
+@Serializable
+data class ApiTask(val id: String, val title: String) {
+    fun toTask(olympiadId: String, tourId: String): Task = Task(id, title, olympiadId, tourId)
+}
+
+@Serializable
+data class LoginRequest(
+    val email: String,
+    val password: String,
+    val method: String
+)
+
+@Serializable
+data class EnterOlympiadRequest(
+    val olympiad: String
+)
