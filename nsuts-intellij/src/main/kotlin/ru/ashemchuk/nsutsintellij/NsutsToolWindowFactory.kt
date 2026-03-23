@@ -10,27 +10,47 @@ import com.intellij.ui.components.panels.VerticalLayout
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
+import kotlinx.coroutines.runBlocking
+import ru.ashemchuk.nsutsintellij.api.ApiClient
 import javax.swing.JButton
 import javax.swing.SwingConstants
 
 class NsutsToolWindowFactory : ToolWindowFactory {
     private val logger = Logger.getInstance(NsutsToolWindowFactory::class.java)
+    private val apiClient = ApiClient()
 
     override fun shouldBeAvailable(project: Project) = true
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val myToolWindow = MyToolWindow(project)
+        val myToolWindow = MyToolWindow(project, apiClient)
         val content =
             ContentFactory.getInstance().createContent(myToolWindow.getContent(), null, false)
         toolWindow.contentManager.addContent(content)
     }
 
-    class MyToolWindow(private val project: Project) {
+    class MyToolWindow(private val project: Project, private val apiClient: ApiClient) {
         private val logger = Logger.getInstance(MyToolWindow::class.java)
 
         private val content = JBPanel<JBPanel<*>>(VerticalLayout(JBUI.scale(10))).apply {
             border = JBUI.Borders.empty(20, 15, 15, 15)
+        }
 
+        init {
+            updateContent()
+        }
+
+        private fun updateContent() {
+            content.removeAll()
+            if (apiClient.isAuthenticated()) {
+                showAuthenticatedView()
+            } else {
+                showUnauthenticatedView()
+            }
+            content.revalidate()
+            content.repaint()
+        }
+
+        private fun showUnauthenticatedView() {
             val titleLabel = JBLabel("Welcome to NSUTS").apply {
                 font = JBFont.h2()
                 horizontalAlignment = SwingConstants.CENTER
@@ -46,14 +66,47 @@ class NsutsToolWindowFactory : ToolWindowFactory {
                     val authDialog = AuthDialog()
                     if (authDialog.showAndGet()) {
                         logger.info("Successfully authenticated")
+                        updateContent()
                     }
                 }
             }
 
-            add(titleLabel)
-            add(descriptionLabel)
-            add(JBPanel<JBPanel<*>>().apply {
+            content.add(titleLabel)
+            content.add(descriptionLabel)
+            content.add(JBPanel<JBPanel<*>>().apply {
                 add(authButton)
+            })
+        }
+
+        private fun showAuthenticatedView() {
+            val titleLabel = JBLabel("NSUTS Tasks").apply {
+                font = JBFont.h2()
+                horizontalAlignment = SwingConstants.CENTER
+            }
+
+            val descriptionLabel = JBLabel("You are logged in. Task tree will appear here.").apply {
+                font = JBFont.regular()
+                horizontalAlignment = SwingConstants.CENTER
+            }
+
+            val logoutButton = JButton("Logout").apply {
+                addActionListener {
+                    runBlocking {
+                        apiClient.logout()
+                    }
+                    updateContent()
+                }
+            }
+
+            val refreshButton = JButton("Refresh").apply {
+                // TODO: refresh task tree
+            }
+
+            content.add(titleLabel)
+            content.add(descriptionLabel)
+            content.add(JBPanel<JBPanel<*>>().apply {
+                add(logoutButton)
+                add(refreshButton)
             })
         }
 

@@ -6,11 +6,14 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPasswordField
 import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.FormBuilder
+import kotlinx.coroutines.runBlocking
+import ru.ashemchuk.nsutsintellij.api.ApiClient
 import java.awt.Dimension
 import javax.swing.JComponent
 
 class AuthDialog : DialogWrapper(null) {
     private val logger = Logger.getInstance(AuthDialog::class.java)
+    private val apiClient = ApiClient()
 
     private val loginField = JBTextField()
     private val passwordField = JBPasswordField()
@@ -31,18 +34,33 @@ class AuthDialog : DialogWrapper(null) {
         val login = loginField.text
         val password = String(passwordField.password)
 
-        // Логируем полученные данные
-        logger.info("Auth dialog submitted - Login: $login, Password: $password")
+        logger.info("Auth dialog submitted - Login: $login")
 
-        // Здесь можно добавить свою логику обработки
-        handleAuth(login, password)
+        if (login.isBlank() || password.isBlank()) {
+            showError("Login and password cannot be empty")
+            return
+        }
 
-        super.doOKAction()
+        // Perform authentication synchronously (blocking)
+        val success = runBlocking {
+            try {
+                apiClient.login(login, password)
+            } catch (e: Exception) {
+                logger.error("Login failed", e)
+                false
+            }
+        }
+
+        if (success) {
+            logger.info("Authentication successful for $login")
+            super.doOKAction()
+        } else {
+            showError("Login failed. Check your credentials.")
+        }
     }
 
-    private fun handleAuth(login: String, password: String) {
-        // TODO: Implement your authentication logic here
-        logger.info("Processing authentication for user: $login")
+    private fun showError(message: String) {
+        setErrorText(message)
     }
 
     override fun getPreferredFocusedComponent(): JComponent? {

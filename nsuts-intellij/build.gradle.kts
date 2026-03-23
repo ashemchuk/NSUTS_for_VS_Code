@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.20"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.20"
     id("org.jetbrains.intellij.platform") version "2.10.2"
 }
 
@@ -24,6 +25,14 @@ dependencies {
         // Add plugin dependencies for compilation here, example:
         // bundledPlugin("com.intellij.java")
     }
+
+    // Ktor HTTP client
+    implementation("io.ktor:ktor-client-core:2.3.12")
+    implementation("io.ktor:ktor-client-cio:2.3.12")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
+    // Kotlinx serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
 }
 
 intellijPlatform {
