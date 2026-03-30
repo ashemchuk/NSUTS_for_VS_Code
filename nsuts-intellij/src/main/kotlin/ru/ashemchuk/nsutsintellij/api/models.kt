@@ -136,3 +136,43 @@ data class LoginRequest(
 data class EnterOlympiadRequest(
     val olympiad: String
 )
+
+@Serializable
+data class ApiResponseReports(
+    val reports: List<ApiReport>? = null
+)
+
+@Serializable
+data class ApiReport(
+    val id: String,
+    val compiler: String,
+    val date: String,
+    val result_line: String,
+    val status: String,
+    val task_id: String,
+    val task_title: String,
+    val testNumber: String? = null,
+    val points: String? = null,
+    val total: String? = null
+) {
+    fun toReport(): Report {
+        val reportStatus = when (status.lowercase()) {
+            "queued" -> ReportStatus.Queued
+            "successful" -> ReportStatus.Successful
+            "unsuccessful" -> ReportStatus.Unsuccessful
+            else -> ReportStatus.Queued
+        }
+        return Report(
+            id = id,
+            compiler = compiler,
+            date = date,
+            result_line = result_line,
+            status = reportStatus,
+            task_id = task_id,
+            task_title = task_title,
+            testNumber = testNumber,
+            points = points,
+            total = total
+        )
+    }
+}

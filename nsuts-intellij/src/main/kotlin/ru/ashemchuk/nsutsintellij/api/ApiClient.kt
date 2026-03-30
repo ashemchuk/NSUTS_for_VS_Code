@@ -11,6 +11,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.content.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -169,7 +171,60 @@ class ApiClient {
         }
     }
 
-    suspend fun submitSolution(taskId: String, langId: String, sourceText: String? = null, sourceFile: ByteArray? = null) {
-       // TODO: implement multipart/form-data submission
-   }
+    suspend fun submitSolution(taskId: String, langId: String, sourceText: String? = null, sourceFile: ByteArray? = null): Boolean {
+        logger.warn("Submitting solution for task $taskId with lang $langId")
+        
+        return try {
+            val response: HttpResponse = client.post("submit/submit") {
+                setBody(
+                    MultiPartFormDataContent(
+                        formData {
+                            append("task_id", taskId)
+                            append("lang_id", langId)
+                            
+                            // Add source text if provided
+                            sourceText?.let { text ->
+                                append("source_text", text)
+                            }
+                            
+                            // Add source file if provided
+                            sourceFile?.let { file ->
+                                append(
+                                    "source_file",
+                                    file,
+                                    Headers.build {
+                                        append(HttpHeaders.ContentType, "application/octet-stream")
+                                        append(HttpHeaders.ContentDisposition, "filename=\"solution.zip\"")
+                                    }
+                                )
+                            }
+                        }
+                    )
+                )
+            }
+            
+            val status = response.status
+            logger.warn("Submit response status: $status")
+            
+            if (status.isSuccess()) {
+                val body = response.bodyAsText()
+                logger.warn("Submit response body: $body")
+                true
+            } else {
+                logger.error("Submit failed with status: $status")
+                false
+            }
+        } catch (e: Exception) {
+            logger.error("Submit failed with exception", e)
+            false
+        }
+    }
+    
+    /**
+     * Get submission reports for a task.
+     */
+    suspend fun getReports(taskId: String): List<Report>? {
+        val response: ApiResponseReports? = get("submit/reports", mapOf("task_id" to taskId))
+        return response?.reports?.map { it.toReport() }
+    }
 }
