@@ -49,6 +49,11 @@
         "command": "nsuts.refresh_task_tree",
         "title": "NSUTS: Refresh tasks list",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "nsuts.download_statement",
+        "title": "Скачать условия (PDF)",
+        "icon": "$(cloud-download)"
       }
     ],
     "viewsContainers": {
@@ -92,6 +97,11 @@
           "command": "nsuts.select_task",
           "when": "view == task-tree && viewItem == task",
           "group": "inline"
+        },
+        {
+          "command": "nsuts.download_statement",
+          "when": "view == task-tree && viewItem == tour",
+          "group": "inline"
         }
       ],
       "view/title": [
@@ -102,30 +112,13 @@
         }
       ],
       "commandPalette": [
-        {
-          "command": "nsuts.auth",
-          "when": "!nsuts.authorized"
-        },
-        {
-          "command": "nsuts.logout",
-          "when": "nsuts.authorized"
-        },
-        {
-          "command": "nsuts.submit",
-          "when": "nsuts.authorized"
-        },
-        {
-          "command": "nsuts.select_task",
-          "when": "nsuts.authorized"
-        },
-        {
-          "command": "nsuts.select_files",
-          "when": "nsuts.authorized"
-        },
-        {
-          "command": "nsuts.select_compiler",
-          "when": "nsuts.authorized"
-        }
+        { "command": "nsuts.auth", "when": "!nsuts.authorized" },
+        { "command": "nsuts.logout", "when": "nsuts.authorized" },
+        { "command": "nsuts.submit", "when": "nsuts.authorized" },
+        { "command": "nsuts.select_task", "when": "nsuts.authorized" },
+        { "command": "nsuts.select_files", "when": "nsuts.authorized" },
+        { "command": "nsuts.select_compiler", "when": "nsuts.authorized" },
+        { "command": "nsuts.download_statement", "when": "nsuts.authorized" }
       ]
     },
     "configuration": [
@@ -135,36 +128,20 @@
           "nsuts.active_task": {
             "type": "object",
             "properties": {
-              "taskId": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "olympiadId": {
-                "type": "string"
-              },
-              "tourId": {
-                "type": "string"
-              }
+              "taskId": { "type": "string" },
+              "name": { "type": "string" },
+              "olympiadId": { "type": "string" },
+              "tourId": { "type": "string" }
             }
           },
           "nsuts.tasks_context": {
             "type": "object",
             "additionalProperties": {
               "type": "object",
-              "required": [
-                "files"
-              ],
+              "required": ["files"],
               "properties": {
-                "files": {
-                  "type": "array",
-                  "items": "string",
-                  "default": []
-                },
-                "compiler": {
-                  "type": "string"
-                }
+                "files": { "type": "array", "items": "string", "default": [] },
+                "compiler": { "type": "string" }
               }
             }
           }

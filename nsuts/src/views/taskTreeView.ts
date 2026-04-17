@@ -8,14 +8,10 @@ import {
 } from "vscode";
 import { client } from "../api/client";
 
-// olympiads -> tours -> tasks
-
 class OlympiadTreeItem extends TreeItem {
     constructor(
         public readonly olympiadId: string,
         public readonly name: string,
-        // public readonly registered: boolean,
-        // public readonly frozen: boolean,
         public readonly coverUrl: string
     ) {
         super(name, TreeItemCollapsibleState.Collapsed);
@@ -34,6 +30,8 @@ class TourTreeItem extends TreeItem {
         public readonly olympiadId: string
     ) {
         super(name, TreeItemCollapsibleState.Collapsed);
+        // Важно: по этому значению package.json понимает, что нужно показать кнопку скачивания
+        this.contextValue = "tour";
     }
 }
 
