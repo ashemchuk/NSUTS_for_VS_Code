@@ -35,6 +35,7 @@ data class Task(
 /**
  * Active task selected by user.
  */
+@Serializable
 data class ActiveTask(
     val taskId: String,
     val name: String,
@@ -45,7 +46,9 @@ data class ActiveTask(
 /**
  * Context for a task (selected files and compiler).
  */
+@Serializable
 data class TaskContext(
+    val taskId: String? = null,
     val files: List<String> = emptyList(),
     val compiler: String? = null
 )
@@ -143,11 +146,16 @@ data class ApiResponseReports(
 )
 
 @Serializable
+data class ApiResponseGetReport(
+    val submits: List<ApiReport>? = null
+)
+
+@Serializable
 data class ApiReport(
     val id: String,
     val compiler: String,
     val date: String,
-    val result_line: String,
+    val result_line: String? = null,
     val status: String,
     val task_id: String,
     val task_title: String,
@@ -156,17 +164,22 @@ data class ApiReport(
     val total: String? = null
 ) {
     fun toReport(): Report {
-        val reportStatus = when (status.lowercase()) {
-            "queued" -> ReportStatus.Queued
-            "successful" -> ReportStatus.Successful
-            "unsuccessful" -> ReportStatus.Unsuccessful
-            else -> ReportStatus.Queued
+        val reportStatus = when (status) {
+            "1" -> ReportStatus.Queued
+            "3" -> ReportStatus.Successful
+            "4" -> ReportStatus.Unsuccessful
+            else -> when (status.lowercase()) {
+                "queued" -> ReportStatus.Queued
+                "successful" -> ReportStatus.Successful
+                "unsuccessful" -> ReportStatus.Unsuccessful
+                else -> ReportStatus.Queued
+            }
         }
         return Report(
             id = id,
             compiler = compiler,
             date = date,
-            result_line = result_line,
+            result_line = result_line ?: "",
             status = reportStatus,
             task_id = task_id,
             task_title = task_title,

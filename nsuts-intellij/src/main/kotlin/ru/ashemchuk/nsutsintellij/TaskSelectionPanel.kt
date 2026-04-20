@@ -1,8 +1,12 @@
 package ru.ashemchuk.nsutsintellij
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task as ProgressTask
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBLabel
@@ -13,7 +17,9 @@ import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.runBlocking
 import ru.ashemchuk.nsutsintellij.api.ApiClient
 import ru.ashemchuk.nsutsintellij.api.Task
+import ru.ashemchuk.nsutsintellij.storage.StateRepository
 import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import javax.swing.BoxLayout
@@ -24,10 +30,12 @@ import javax.swing.ListSelectionModel
 import javax.swing.SwingConstants
 
 class TaskSelectionPanel(private val project: Project, private val apiClient: ApiClient) {
+    private val logger = Logger.getInstance(TaskSelectionPanel::class.java)
     private var selectedTask: Task? = null
     private var selectedFiles = mutableListOf<VirtualFile>()
     private var selectedCompiler: String? = null
     private var compilerMap = mapOf<String, String>() // title -> id
+    private var savedContext: ru.ashemchuk.nsutsintellij.api.TaskContext? = null
     
     private val content = JBPanel<JBPanel<*>>(VerticalLayout(JBUI.scale(10))).apply {
         border = JBUI.Borders.empty(20, 15, 15, 15)
@@ -46,6 +54,7 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
     private val compilerComboBox = ComboBox<String>().apply {
         addActionListener {
             selectedCompiler = selectedItem as? String
+            saveTaskContext()
         }
     }
     
@@ -56,8 +65,10 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
                 .withDescription("Select source files to submit")
             
             FileChooser.chooseFiles(descriptor, project, null)?.let { files ->
+                logger.warn("Adding files: ${files.map { it.name }}")
                 selectedFiles.addAll(files)
                 updateFileList()
+                saveTaskContext()
             }
         }
     }
@@ -68,6 +79,7 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
             if (selectedIndex != -1) {
                 selectedFiles.removeAt(selectedIndex)
                 updateFileList()
+                saveTaskContext()
             }
         }
     }
@@ -81,6 +93,7 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
     init {
         setupUI()
         loadCompilers()
+        loadState()
     }
     
     private fun setupUI() {
@@ -108,10 +121,42 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
     fun getContent(): JBPanel<JBPanel<*>> = content
     
     fun setTask(task: Task) {
+        logger.info("Setting task: ${task.id}, savedContext taskId=${savedContext?.taskId}")
         selectedTask = task
         taskLabel.text = "Task: ${task.title}"
         selectedFiles.clear()
+        
+        var filesRestored = false
+        // Restore files from saved context if it matches this task
+        savedContext?.let { context ->
+            if (context.taskId == task.id) {
+                logger.info("Restoring files for task ${task.id}: ${context.files}")
+                val localFileSystem = com.intellij.openapi.vfs.LocalFileSystem.getInstance()
+                context.files.forEach { path ->
+                    val file = localFileSystem.findFileByPath(path)
+                    if (file != null) {
+                        selectedFiles.add(file)
+                        logger.info("Restored file: $path")
+                    } else {
+                        logger.warn("File not found: $path")
+                    }
+                }
+                filesRestored = true
+            } else {
+                logger.info("Saved context taskId mismatch (${context.taskId} != ${task.id}), skipping file restoration")
+            }
+        }
+        
         updateFileList()
+        // Save active task immediately
+        saveActiveTask()
+        // Save context only if files were not restored (i.e., we switched to a different task)
+        if (!filesRestored) {
+            logger.info("Files not restored, saving empty context for task ${task.id}")
+            saveTaskContext()
+        } else {
+            logger.info("Files restored, skipping context save to preserve files")
+        }
         loadCompilersForTask(task)
     }
     
@@ -142,8 +187,14 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
                 compilerComboBox.removeAllItems()
                 compilers.forEach { compilerComboBox.addItem(it.title) }
                 if (compilers.isNotEmpty()) {
-                    selectedCompiler = compilers.first().title
-                    compilerComboBox.selectedItem = selectedCompiler
+                    // Try to restore saved compiler selection
+                    val savedCompiler = selectedCompiler
+                    if (savedCompiler != null && compilerMap.containsKey(savedCompiler)) {
+                        compilerComboBox.selectedItem = savedCompiler
+                    } else {
+                        selectedCompiler = compilers.first().title
+                        compilerComboBox.selectedItem = selectedCompiler
+                    }
                 } else {
                     JOptionPane.showMessageDialog(
                         content,
@@ -152,6 +203,10 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
                         JOptionPane.WARNING_MESSAGE
                     )
                 }
+                // Save active task
+                saveActiveTask()
+                // Save context with updated compiler selection
+                saveTaskContext()
             } catch (e: Exception) {
                 e.printStackTrace()
                 JOptionPane.showMessageDialog(
@@ -162,6 +217,33 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
                 )
             }
         }
+    }
+    
+    private fun saveActiveTask() {
+        selectedTask?.let { task ->
+            val activeTask = ru.ashemchuk.nsutsintellij.api.ActiveTask(task.id, task.title, task.tourId, task.olympiadId)
+            StateRepository.saveActiveTask(activeTask)
+        } ?: StateRepository.saveActiveTask(null)
+    }
+    
+    private fun saveTaskContext() {
+        val filePaths = selectedFiles.map { it.path }
+        val context = ru.ashemchuk.nsutsintellij.api.TaskContext(
+            taskId = selectedTask?.id,
+            files = filePaths,
+            compiler = selectedCompiler
+        )
+        logger.warn("Saving task context: taskId=${context.taskId}, files=${context.files}")
+        StateRepository.saveTaskContext(context)
+    }
+    
+    private fun loadState() {
+        savedContext = StateRepository.loadTaskContext()
+        logger.warn("Loaded saved context: taskId=${savedContext?.taskId}, files=${savedContext?.files}, compiler=${savedContext?.compiler}")
+        savedContext?.let {
+            selectedCompiler = it.compiler
+        }
+        // Active task restoration is handled by the tree view
     }
     
     private fun submitSolution() {
@@ -208,24 +290,47 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
             return
         }
         
-        // Create ZIP file from selected files
-        val zipBytes = createZipFromFiles()
+        // Determine submission method
+        val sourceText: String?
+        val sourceFile: ByteArray?
+        
+        if (selectedFiles.size == 1) {
+            // Try to read as text
+            val file = selectedFiles.first()
+            val text = readFileAsText(file)
+            if (text != null) {
+                sourceText = text
+                sourceFile = null
+            } else {
+                // Fallback to ZIP (single file inside)
+                sourceText = null
+                sourceFile = createZipFromFiles()
+            }
+        } else {
+            // Multiple files -> ZIP
+            sourceText = null
+            sourceFile = createZipFromFiles()
+        }
         
         runBlocking {
             try {
                 val success = apiClient.submitSolution(
                     taskId = task.id,
                     langId = compilerId,
-                    sourceFile = zipBytes
+                    sourceText = sourceText,
+                    sourceFile = sourceFile
                 )
                 
                 if (success) {
+                    // Show initial success message
                     JOptionPane.showMessageDialog(
                         content,
-                        "Solution submitted successfully!",
+                        "Solution submitted successfully! Waiting for results...",
                         "Success",
                         JOptionPane.INFORMATION_MESSAGE
                     )
+                    // Start polling in background
+                    startPolling(task)
                 } else {
                     JOptionPane.showMessageDialog(
                         content,
@@ -246,6 +351,61 @@ class TaskSelectionPanel(private val project: Project, private val apiClient: Ap
         }
     }
     
+    private fun startPolling(task: Task) {
+        ProgressManager.getInstance().run(object : ProgressTask.Backgroundable(project, "Waiting for results", true) {
+            override fun run(indicator: ProgressIndicator) {
+                indicator.isIndeterminate = true
+                indicator.text = "Polling submission result..."
+                
+                runBlocking {
+                    try {
+                        val report = apiClient.pollSubmissionResult(task.id, task.olympiadId, task.tourId)
+                        if (report != null) {
+                            // Show result
+                            val message = when (report.status) {
+                                ru.ashemchuk.nsutsintellij.api.ReportStatus.Successful ->
+                                    "Solution passed! ${report.result_line}"
+                                ru.ashemchuk.nsutsintellij.api.ReportStatus.Unsuccessful ->
+                                    "Solution failed. ${report.result_line}"
+                                else ->
+                                    "Unexpected status: ${report.status}"
+                            }
+                            JOptionPane.showMessageDialog(
+                                content,
+                                message,
+                                "Result",
+                                JOptionPane.INFORMATION_MESSAGE
+                            )
+                        } else {
+                            JOptionPane.showMessageDialog(
+                                content,
+                                "Timeout waiting for result. Please check reports later.",
+                                "Timeout",
+                                JOptionPane.WARNING_MESSAGE
+                            )
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        JOptionPane.showMessageDialog(
+                            content,
+                            "Error while polling: ${e.message}",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                        )
+                    }
+                }
+            }
+        })
+    }
+
+    private fun readFileAsText(file: VirtualFile): String? {
+        return try {
+            String(file.contentsToByteArray(), StandardCharsets.UTF_8)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun createZipFromFiles(): ByteArray {
         ByteArrayOutputStream().use { baos ->
             ZipOutputStream(baos).use { zos ->

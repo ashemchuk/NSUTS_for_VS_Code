@@ -17,6 +17,7 @@ import ru.ashemchuk.nsutsintellij.api.ApiClient
 import ru.ashemchuk.nsutsintellij.api.Task
 import ru.ashemchuk.nsutsintellij.api.TaskTreeModel
 import ru.ashemchuk.nsutsintellij.api.TaskTreeCellRenderer
+import ru.ashemchuk.nsutsintellij.storage.StateRepository
 import javax.swing.JButton
 import javax.swing.JSplitPane
 import javax.swing.JTabbedPane
@@ -48,14 +49,23 @@ class NsutsToolWindowFactory : ToolWindowFactory {
         
         private val taskSelectionPanel = TaskSelectionPanel(project, apiClient)
         private val reportsPanel = ReportsPanel(apiClient)
+        private var activeTask: Task? = null
 
         private val content = JBPanel<JBPanel<*>>(VerticalLayout(JBUI.scale(10))).apply {
             border = JBUI.Borders.empty(20, 15, 15, 15)
         }
 
         init {
+            loadActiveTask()
             updateContent()
             setupTreeSelectionListener()
+        }
+
+        private fun loadActiveTask() {
+            val activeTaskData = StateRepository.loadActiveTask()
+            activeTask = activeTaskData?.let { data ->
+                Task(data.taskId, data.name, data.olympiadId, data.tourId)
+            }
         }
 
         private fun updateContent() {
@@ -129,6 +139,11 @@ class NsutsToolWindowFactory : ToolWindowFactory {
             val tabbedPane = JTabbedPane().apply {
                 addTab("Submit Solution", taskSelectionPanel.getContent())
                 addTab("View Reports", reportsPanel.getContent())
+                addChangeListener { e ->
+                    if (selectedIndex == 1) { // "View Reports" tab index
+                        reportsPanel.refreshIfTaskSelected()
+                    }
+                }
             }
 
             // Create split pane for tree and tabs
@@ -144,6 +159,17 @@ class NsutsToolWindowFactory : ToolWindowFactory {
             content.add(titleLabel)
             content.add(splitPane)
             content.add(buttonPanel)
+            
+            // Restore active task if any
+            restoreActiveTask()
+        }
+        
+        private fun restoreActiveTask() {
+            activeTask?.let { task ->
+                taskSelectionPanel.setTask(task)
+                reportsPanel.setTask(task)
+                // TODO: select task in tree (requires tree to be loaded)
+            }
         }
         
         private fun setupTreeSelectionListener() {

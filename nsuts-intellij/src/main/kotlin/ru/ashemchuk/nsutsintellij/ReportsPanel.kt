@@ -117,4 +117,10 @@ class ReportsPanel(private val apiClient: ApiClient) {
         reports = emptyList()
         updateTable()
     }
+    
+    fun refreshIfTaskSelected() {
+        if (selectedTask != null) {
+            loadReports()
+        }
+    }
 }

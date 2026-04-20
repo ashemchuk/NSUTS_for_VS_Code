@@ -14,6 +14,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.content.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.delay
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ru.ashemchuk.nsutsintellij.api.LoginRequest
@@ -175,22 +176,22 @@ class ApiClient {
         logger.warn("Submitting solution for task $taskId with lang $langId")
         
         return try {
-            val response: HttpResponse = client.post("submit/submit") {
+            val response: HttpResponse = client.post("submit/do_submit") {
                 setBody(
                     MultiPartFormDataContent(
                         formData {
-                            append("task_id", taskId)
-                            append("lang_id", langId)
+                            append("taskId", taskId)
+                            append("langId", langId)
                             
                             // Add source text if provided
                             sourceText?.let { text ->
-                                append("source_text", text)
+                                append("sourceText", text)
                             }
                             
                             // Add source file if provided
                             sourceFile?.let { file ->
                                 append(
-                                    "source_file",
+                                    "sourceFile",
                                     file,
                                     Headers.build {
                                         append(HttpHeaders.ContentType, "application/octet-stream")
@@ -212,6 +213,13 @@ class ApiClient {
                 true
             } else {
                 logger.error("Submit failed with status: $status")
+                // Log response body for debugging
+                val body = try {
+                    response.bodyAsText()
+                } catch (e: Exception) {
+                    "Unable to read body: ${e.message}"
+                }
+                logger.error("Submit response body: $body")
                 false
             }
         } catch (e: Exception) {
@@ -224,7 +232,54 @@ class ApiClient {
      * Get submission reports for a task.
      */
     suspend fun getReports(taskId: String): List<Report>? {
-        val response: ApiResponseReports? = get("submit/reports", mapOf("task_id" to taskId))
-        return response?.reports?.map { it.toReport() }
+        val response: ApiResponseGetReport? = get("report/get_report")
+        logger.warn("Fetched reports for task $taskId: ${response?.submits?.size} submits")
+        response?.submits?.forEach { submit ->
+            logger.warn("Submit: id=${submit.id}, task_id=${submit.task_id}, status=${submit.status}")
+        }
+        return response?.submits
+            ?.filter { it.task_id == taskId }
+            ?.map { it.toReport() }
+    }
+
+    /**
+     * Poll for submission result with exponential backoff.
+     * Returns the final report when status is not Queued, or null on timeout.
+     */
+    suspend fun pollSubmissionResult(taskId: String, olympiadId: String, tourId: String, timeoutMs: Long = 30000, initialDelayMs: Long = 1000): Report? {
+        val startTime = System.currentTimeMillis()
+        var delay = initialDelayMs
+        val maxDelay = 5000L
+        var pollCount = 0
+
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            pollCount++
+            logger.warn("Poll #$pollCount for task $taskId (olympiad=$olympiadId, tour=$tourId)")
+            // Set context before fetching reports
+            enterOlympiad(olympiadId)
+            enterTour(tourId.toInt())
+            
+            val reports = getReports(taskId)
+            logger.warn("Reports count after filtering: ${reports?.size}")
+            val latestReport = reports?.maxByOrNull { it.date }
+            if (latestReport != null) {
+                logger.warn("Latest report: id=${latestReport.id}, status=${latestReport.status}, date=${latestReport.date}")
+                if (latestReport.status != ReportStatus.Queued) {
+                    logger.warn("Found final report with status ${latestReport.status}")
+                    return latestReport
+                } else {
+                    logger.warn("Report still queued, continuing...")
+                }
+            } else {
+                logger.warn("No reports found for task $taskId")
+            }
+            // Wait before next poll
+            logger.warn("Waiting ${delay}ms before next poll")
+            delay(delay)
+            // Exponential backoff
+            delay = (delay * 1.5).toLong().coerceAtMost(maxDelay)
+        }
+        logger.warn("Polling timeout after $timeoutMs ms")
+        return null // timeout
     }
 }
