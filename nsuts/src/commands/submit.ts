@@ -143,9 +143,48 @@ async function getReport(activeTask: ActiveTask) {
         updateSolutionResultStatus("Accepted!");
     }
     vscode.window.showInformationMessage(
-        "Результат по задаче " + activeTask.name + " : " + report.result_line
+        "Результат по задаче " + activeTask.name + " : " + translationReportResult(report.result_line)
     );
 }
+
+function translationReportResult(status: string) {
+    if (/^A+$/.test(status)) {
+        return "🏆 ACCEPTED!";
+    }
+    if (status == "C") {
+        return "🚧 Compile Error";
+    }
+    if (/^A*W$/.test(status)) {
+        const acceptedCount = (status.match(/A/g) ?? []).length;
+        return `🗿 Wrong answer on test ${acceptedCount + 1}`;
+    }
+    if (/^A*T$/.test(status)) {
+        const acceptedCount = (status.match(/A/g) ?? []).length;
+        return `⌛ Time Limit Exceeded on test ${acceptedCount + 1}`;
+    }
+    if (/^A*R$/.test(status)) {
+        const acceptedCount = (status.match(/A/g) ?? []).length;
+        return `🔥 Run-Time Error on test ${acceptedCount + 1}`;
+    }
+    if (/^A*M$/.test(status)) {
+        const acceptedCount = (status.match(/A/g) ?? []).length;
+        return `🤯 Memory Limit Exceeded on test ${acceptedCount + 1}`;
+    }
+    if (/^A*AO$/.test(status)) {
+        const acceptedCount = (status.match(/A/g) ?? []).length;
+        return `🔍 No Output File on test ${acceptedCount + 1}`;
+    }
+    if (/^A*P$/.test(status)) {
+        const acceptedCount = (status.match(/A/g) ?? []).length;
+        return `🚽 Presentation Error on test ${acceptedCount + 1}`;
+    }
+    if (/^A*D$/.test(status)) {
+        const acceptedCount = (status.match(/A/g) ?? []).length;
+        return `🥶 Deadlock - Timeout on test ${acceptedCount + 1}`;
+    }
+    return status;
+}
+
 async function pollResolvedReports(activeTask: ActiveTask) {
     for (let i = 0, t = 1500; ; i++) {
         if (i > 25) {
