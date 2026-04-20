@@ -10,14 +10,10 @@ import {
 import { client } from "../api/client";
 import { ReportStatus } from "../api/api";
 
-// olympiads -> tours -> tasks
-
 class OlympiadTreeItem extends TreeItem {
     constructor(
         public readonly olympiadId: string,
         public readonly name: string,
-        // public readonly registered: boolean,
-        // public readonly frozen: boolean,
         public readonly coverUrl: string
     ) {
         super(name, TreeItemCollapsibleState.Collapsed);
@@ -37,6 +33,9 @@ class TourTreeItem extends TreeItem {
         public readonly taskCount: number,
         public readonly acceptedCount: number
     ) {
+        super(name, TreeItemCollapsibleState.Collapsed);
+        // Важно: по этому значению package.json понимает, что нужно показать кнопку скачивания
+        this.contextValue = "tour";
         const label = name +
             (taskCount > 0
                 ? ` (${acceptedCount}/${taskCount})`
