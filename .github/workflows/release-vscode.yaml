@@ -35,7 +35,7 @@ jobs:
         with:
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          files: "*.vsix"
+          files: "nsuts-vscode/*.vsix"
           draft: true
           prerelease: false
           generate_release_notes: true
