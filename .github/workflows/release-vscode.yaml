@@ -1,6 +1,8 @@
-name: Build and Release VS Code Extension
+name: Build and Release - VS Code Extension
+
 permissions:
   contents: write
+
 on:
   push:
     tags:
@@ -9,7 +11,9 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+        working-directory: nsuts-vscode
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,24 +22,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'npm'
-          cache-dependency-path: nsuts
+          cache-dependency-path: nsuts-vscode
 
       - name: Install dependencies
         run: npm ci
-        working-directory: nsuts
 
       - name: Build VSIX package
         run: npm run pack
-        working-directory: nsuts
-
-      
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          files: "nsuts/*.vsix"
+          files: "*.vsix"
           draft: true
           prerelease: false
           generate_release_notes: true

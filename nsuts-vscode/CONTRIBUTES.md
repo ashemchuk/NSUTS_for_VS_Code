@@ -3,8 +3,8 @@
 ### Первый запуск
 
 ```bash
-npm install
-npm run codegen
+nvm use
+npm ci
 ```
 
 Нажмите `F5` для запуска в режиме отладки.
@@ -14,7 +14,8 @@ npm run codegen
 - `npm run compile` — скомпилировать проект
 - `npm run watch` — компиляция при изменениях
 - `npm run codegen` — обновить типы API
-- `vsce package` — собрать .vsix файл
+- `npm run pack` — собрать .vsix файл
+- `npm run test` - прогнать тесты
 
 ## Структура проекта
 
