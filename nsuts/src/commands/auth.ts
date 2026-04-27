@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { client } from "../api/client";
-import { PathsLoginPostRequestBodyContentApplicationJsonMethod } from "../api/api";
+import { PathsLoginPostRequestBodyApplicationJsonMethod } from "../api/api";
 
 export async function getAuthCookie(
     email: string,
@@ -11,7 +11,7 @@ export async function getAuthCookie(
         body: {
             email,
             password,
-            method: PathsLoginPostRequestBodyContentApplicationJsonMethod.internal,
+            method: PathsLoginPostRequestBodyApplicationJsonMethod.internal,
         },
     });
 
