@@ -33,15 +33,15 @@ class TourTreeItem extends TreeItem {
         public readonly taskCount: number,
         public readonly acceptedCount: number
     ) {
-        super(name, TreeItemCollapsibleState.Collapsed);
-        // Важно: по этому значению package.json понимает, что нужно показать кнопку скачивания
-        this.contextValue = "tour";
         const label = name +
             (taskCount > 0
                 ? ` (${acceptedCount}/${taskCount})`
                 : "");
 
         super(label, TreeItemCollapsibleState.Collapsed);
+
+        // Важно: по этому значению package.json понимает, что нужно показать кнопку скачивания
+        this.contextValue = "tour";
 
         this.id = `tour:${tourId}`;
     }
@@ -101,7 +101,6 @@ export class TaskTreeDataProvider implements TreeDataProvider<Item> {
         const enterOlympiad = await client.POST("/olympiads/enter", {
             body: { olympiad: olympiad.olympiadId },
         });
-
         if (enterOlympiad.error) return [];
 
         const toursRes = await client.GET("/tours/list");
@@ -110,30 +109,29 @@ export class TaskTreeDataProvider implements TreeDataProvider<Item> {
         const result: TourTreeItem[] = [];
 
         for (const { id, title } of toursRes.data.tours) {
+            // Входим в тур
             await client.GET("/tours/enter", {
                 params: { query: { tour: Number(id) } },
             });
 
+            // Получаем задачи и информацию о сабмитах в одном контексте (текущий тур + олимпиада)
             const submitInfo = await client.GET("/submit/submit_info");
             const tasks = submitInfo.data?.tasks ?? [];
-            const taskIds = tasks.map(t => t.id);
-            const taskCount = taskIds.length;
-
+            
+            // Получаем отчёт ТОЛЬКО для текущего контекста
             const { data: reportData } = await client.GET("/report/get_report");
             
-            const tourSubmits = (reportData?.submits ?? []).filter(s => taskIds.includes(s.task_id));
+            // Создаём Set принятых задач
+            const acceptedTaskIds = new Set(
+                (reportData?.submits ?? [])
+                    .filter(s => s.status === ReportStatus.Successful)
+                    .map(s => s.task_id)
+            );
             
-            const lastSubmitByTask = new Map();
-            for (const submit of tourSubmits) {
-                const prev = lastSubmitByTask.get(submit.task_id);
-                if (!prev || Number(submit.id) > Number(prev.id)) {
-                    lastSubmitByTask.set(submit.task_id, submit);
-                }
-            }
-            
+            // Подсчитываем принятые задачи ТОЛЬКО из текущего списка задач
             let acceptedCount = 0;
-            for (const [taskId, submit] of lastSubmitByTask.entries()) {
-                if (submit.status === ReportStatus.Successful) {
+            for (const task of tasks) {
+                if (acceptedTaskIds.has(task.id)) {
                     acceptedCount++;
                 }
             }
@@ -143,8 +141,8 @@ export class TaskTreeDataProvider implements TreeDataProvider<Item> {
                     id,
                     title,
                     olympiad.olympiadId,
-                    taskCount,
-                    acceptedCount
+                    tasks.length,     // taskCount из submitInfo
+                    acceptedCount     // подсчитано по тем же задачам
                 )
             );
         }
