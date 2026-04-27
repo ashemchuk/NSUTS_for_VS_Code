@@ -54,6 +54,10 @@
         "command": "nsuts.download_statement",
         "title": "Скачать условия (PDF)",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "nsuts.submit_issue",
+        "title": "NSUTS: Сообщить о проблеме/предложении"
       }
     ],
     "viewsContainers": {
@@ -139,6 +143,10 @@
         {
           "command": "nsuts.download_statement",
           "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.submit_issue",
+          "when": "true"
         }
       ]
     },

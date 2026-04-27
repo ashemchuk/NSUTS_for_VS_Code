@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { TaskTreeDataProvider } from "./views/taskTreeView";
-import { client, registerAuthMiddleware } from "./api/client"; 
+import { client, registerAuthMiddleware } from "./api/client";
 import { getAuthHandler } from "./commands/auth";
 import { getSubmitHandler } from "./commands/submit";
 import { getSelectFilesHandler } from "./commands/selectFiles";
@@ -11,7 +11,8 @@ import { getLogoutHandler } from "./commands/logout";
 import { getSelectCompilerHandler } from "./commands/selectCompiler";
 import { getRefreshTaskTreeHandler } from "./commands/refreshTaskTree";
 
-import { getDownloadStatementHandler } from "./commands/downloadStatement"; 
+import { getDownloadStatementHandler } from "./commands/downloadStatement";
+import { getSubmitIssueHandler } from "./commands/submitIssue";
 
 export function activate(context: vscode.ExtensionContext) {
     registerAuthMiddleware(context);
@@ -24,19 +25,38 @@ export function activate(context: vscode.ExtensionContext) {
         );
     });
 
-    vscode.commands.registerCommand("nsuts.select_compiler", getSelectCompilerHandler(context));
+    vscode.commands.registerCommand(
+        "nsuts.select_compiler",
+        getSelectCompilerHandler(context)
+    );
     vscode.commands.registerCommand("nsuts.auth", getAuthHandler(context));
     vscode.commands.registerCommand("nsuts.submit", getSubmitHandler(context));
-    vscode.commands.registerCommand("nsuts.select_task", getSelectTaskHandler(context));
+    vscode.commands.registerCommand(
+        "nsuts.select_task",
+        getSelectTaskHandler(context)
+    );
     vscode.commands.registerCommand("nsuts.logout", getLogoutHandler(context));
-    vscode.commands.registerCommand("nsuts.select_files", getSelectFilesHandler());
-    
+    vscode.commands.registerCommand(
+        "nsuts.select_files",
+        getSelectFilesHandler()
+    );
+
     // РЕГИСТРИРУЕМ КОМАНДУ КРАСИВО, КАК И ОСТАЛЬНЫЕ
-    vscode.commands.registerCommand("nsuts.download_statement", getDownloadStatementHandler(context));
+    vscode.commands.registerCommand(
+        "nsuts.download_statement",
+        getDownloadStatementHandler(context)
+    );
+    vscode.commands.registerCommand(
+        "nsuts.submit_issue",
+        getSubmitIssueHandler(context)
+    );
 
     const taskTreeProvider = new TaskTreeDataProvider();
     vscode.window.registerTreeDataProvider("task-tree", taskTreeProvider);
-    vscode.commands.registerCommand("nsuts.refresh_task_tree", getRefreshTaskTreeHandler(taskTreeProvider));
+    vscode.commands.registerCommand(
+        "nsuts.refresh_task_tree",
+        getRefreshTaskTreeHandler(taskTreeProvider)
+    );
 
     renderActiveTaskStatus();
 }
