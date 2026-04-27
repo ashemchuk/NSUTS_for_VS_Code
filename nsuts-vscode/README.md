@@ -2,5 +2,4 @@
 
 ## Development
 
-- Use node v20
-- Run `npm run codegen` to generate API client types
+- Use node from `.nvmrc`
