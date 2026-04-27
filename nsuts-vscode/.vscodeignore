@@ -12,3 +12,4 @@ vsc-extension-quickstart.md
 .wdio-vscode-service/
 .vscode-test/
 .env
+reports/
