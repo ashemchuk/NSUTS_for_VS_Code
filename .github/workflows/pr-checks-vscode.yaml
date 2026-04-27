@@ -21,6 +21,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: nsuts-vscode
 
+      - name: Cache WDIO dependecies
+        uses: actions/cache@v5
+        with:
+          path: nsuts-vscode/.wdio-vscode-service
+          key: ${{ runner.os }}-wdio
+
       - name: Install dependencies
         run: npm ci
 
@@ -30,5 +36,8 @@ jobs:
       - name: Compile
         run: npm run compile
 
-      # - name: E2E Tests
-      #   run: xvfb-run -a npm run wdio
+      - name: E2E Tests
+        run: xvfb-run -a npm run wdio || echo "e2e failed :-("
+        env:
+          NSUTS_EMAIL: ${{ secrets.NSUTS_EMAIL }}
+          NSUTS_PASSWORD: ${{ secrets.NSUTS_PASSWORD }}

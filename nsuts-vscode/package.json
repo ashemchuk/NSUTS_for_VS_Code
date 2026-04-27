@@ -112,13 +112,34 @@
         }
       ],
       "commandPalette": [
-        { "command": "nsuts.auth", "when": "!nsuts.authorized" },
-        { "command": "nsuts.logout", "when": "nsuts.authorized" },
-        { "command": "nsuts.submit", "when": "nsuts.authorized" },
-        { "command": "nsuts.select_task", "when": "nsuts.authorized" },
-        { "command": "nsuts.select_files", "when": "nsuts.authorized" },
-        { "command": "nsuts.select_compiler", "when": "nsuts.authorized" },
-        { "command": "nsuts.download_statement", "when": "nsuts.authorized" }
+        {
+          "command": "nsuts.auth",
+          "when": "!nsuts.authorized"
+        },
+        {
+          "command": "nsuts.logout",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.submit",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_task",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_files",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.select_compiler",
+          "when": "nsuts.authorized"
+        },
+        {
+          "command": "nsuts.download_statement",
+          "when": "nsuts.authorized"
+        }
       ]
     },
     "configuration": [
@@ -128,20 +149,36 @@
           "nsuts.active_task": {
             "type": "object",
             "properties": {
-              "taskId": { "type": "string" },
-              "name": { "type": "string" },
-              "olympiadId": { "type": "string" },
-              "tourId": { "type": "string" }
+              "taskId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "olympiadId": {
+                "type": "string"
+              },
+              "tourId": {
+                "type": "string"
+              }
             }
           },
           "nsuts.tasks_context": {
             "type": "object",
             "additionalProperties": {
               "type": "object",
-              "required": ["files"],
+              "required": [
+                "files"
+              ],
               "properties": {
-                "files": { "type": "array", "items": "string", "default": [] },
-                "compiler": { "type": "string" }
+                "files": {
+                  "type": "array",
+                  "items": "string",
+                  "default": []
+                },
+                "compiler": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -176,7 +213,7 @@
     "@wdio/json-reporter": "^9.20.0",
     "@wdio/local-runner": "^9.21.0",
     "@wdio/mocha-framework": "^9.21.0",
-    "@wdio/spec-reporter": "^9.20.0",
+    "@wdio/spec-reporter": "^9.27.0",
     "dotenv": "^17.2.3",
     "eslint": "^9.36.0",
     "expect-webdriverio": "^5.6.0",

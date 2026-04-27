@@ -1,30 +1,26 @@
 {
-	"compilerOptions": {
-		"types": [
-			"node",
-			"@wdio/globals/types",
+    "compilerOptions": {
+        "types": [
+            "node",
+            "mocha",
+            "@wdio/globals/types",
             "@wdio/mocha-framework",
-            "wdio-vscode-service"
+            "wdio-vscode-service",
+            "expect-webdriverio",
         ],
-		"module": "nodenext",
-		"moduleResolution": "nodenext",
-		"target": "ES2022",
-		"esModuleInterop": true,
-		"outDir": "out",
-		"skipLibCheck": true,
-		"lib": [
-			"ES2022"
-		],
-		"rootDir": "./",
-		"sourceMap": true,
-		"strict": true,   /* enable all strict type-checking options */
-		"noUncheckedIndexedAccess": true,
-		"declaration": true
-		/* Additional Checks */
-		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
-	},
-	"include": ["./src/**/*"],
-	"exclude": ["./test/**/*", "node_modules"]
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "target": "ES2022",
+        "esModuleInterop": true,
+        "outDir": "out",
+        "skipLibCheck": true,
+        "lib": ["ES2022"],
+        "rootDir": "./",
+        "sourceMap": true,
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "declaration": true,
+    },
+    "include": ["./src/**/*", "./test/**/*.ts", "wdio.conf.ts"],
+    "exclude": ["node_modules"]
 }
