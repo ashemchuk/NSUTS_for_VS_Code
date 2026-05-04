@@ -1,40 +1,97 @@
-import createClient, { Middleware } from "openapi-fetch";
-
+import createClient, { Middleware, Client } from "openapi-fetch";
 import type { paths } from "./api";
 import { ExtensionContext } from "vscode";
-import { getAuthCookie, getAuthData, getAuthHandler } from "../commands/auth";
+import { getAuthCookie, getAuthData } from "../commands/auth";
+import { getBaseUrl } from "../config";
 
-export const client = createClient<paths>({
-    baseUrl: "https://fresh.nsuts.ru/nsuts-new/api/",
-});
+/**
+ * Create an API client with the given base URL and optional middleware.
+ */
+function createApiClient(
+    baseUrl: string,
+    context?: ExtensionContext
+): Client<paths> {
+    const client = createClient<paths>({ baseUrl });
 
-export function registerAuthMiddleware(context: ExtensionContext) {
-    const middleware: Middleware = {
-        async onRequest({ request }) {
-            const cookie = await context.secrets.get("nsuts.cookie");
+    if (context) {
+        const middleware: Middleware = {
+            async onRequest({ request }) {
+                // Derive storage key from baseUrl host
+                const host = new URL(baseUrl).host;
+                const cookieKey = `nsuts.cookie.${host}`;
+                const cookie = await context.secrets.get(cookieKey);
 
-            if (cookie) {
-                request.headers.set("Cookie", cookie);
-            }
-
-            return request;
-        },
-        async onResponse({ response }) {
-            if (400 <= response.status && response.status < 500) {
-                let email = await context.secrets.get("nsuts.email");
-                let password = await context.secrets.get("nsuts.password");
-
-                if (!email || !password) {
-                    const data = await getAuthData();
-                    email = data.email;
-                    password = data.password;
+                if (cookie) {
+                    request.headers.set("Cookie", cookie);
                 }
-                const cookie = await getAuthCookie(email, password);
-                await context.secrets.store("nsuts.cookie", cookie);
-                //TODO: authorized retry
-            }
-        },
-    };
 
-    client.use(middleware);
+                return request;
+            },
+            async onResponse({ response }) {
+                if (400 <= response.status && response.status < 500) {
+                    const host = new URL(baseUrl).host;
+                    const emailKey = `nsuts.email.${host}`;
+                    const passwordKey = `nsuts.password.${host}`;
+                    const cookieKey = `nsuts.cookie.${host}`;
+
+                    let email = await context.secrets.get(emailKey);
+                    let password = await context.secrets.get(passwordKey);
+
+                    if (!email || !password) {
+                        // Fallback to legacy keys for backward compatibility
+                        email = await context.secrets.get("nsuts.email");
+                        password = await context.secrets.get("nsuts.password");
+                    }
+
+                    if (!email || !password) {
+                        const data = await getAuthData();
+                        email = data.email;
+                        password = data.password;
+                    }
+
+                    try {
+                        const cookie = await getAuthCookie(email, password);
+                        await context.secrets.store(cookieKey, cookie);
+                        // TODO: authorized retry
+                    } catch (error) {
+                        // Ignore re-auth failures
+                    }
+                }
+            },
+        };
+        client.use(middleware);
+    }
+
+    return client;
+}
+
+/**
+ * Global client instance (lazy) for the current baseUrl.
+ * Use `getClient` to get a client with the current configuration.
+ */
+let globalClient: Client<paths> | null = null;
+let globalContext: ExtensionContext | null = null;
+
+export function getClient(context?: ExtensionContext): Client<paths> {
+    const baseUrl = getBaseUrl();
+    if (!globalClient || globalContext !== context) {
+        globalClient = createApiClient(baseUrl, context);
+        globalContext = context || null;
+    }
+    return globalClient;
+}
+
+/**
+ * @deprecated Use `getClient()` instead.
+ */
+export const client = createApiClient(getBaseUrl());
+
+/**
+ * Register auth middleware for the global client (legacy).
+ * This is called from extension activation.
+ */
+export function registerAuthMiddleware(context: ExtensionContext) {
+    // This ensures the global client uses the provided context.
+    globalContext = context;
+    globalClient = createApiClient(getBaseUrl(), context);
 }

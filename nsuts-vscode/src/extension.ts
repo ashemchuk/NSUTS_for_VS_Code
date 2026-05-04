@@ -13,6 +13,7 @@ import { getRefreshTaskTreeHandler } from "./commands/refreshTaskTree";
 
 import { getDownloadStatementHandler } from "./commands/downloadStatement";
 import { getSubmitIssueHandler } from "./commands/submitIssue";
+import { getSelectPlatformHandler } from "./commands/selectPlatform";
 
 export function activate(context: vscode.ExtensionContext) {
     registerAuthMiddleware(context);
@@ -49,6 +50,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
         "nsuts.submit_issue",
         getSubmitIssueHandler(context)
+    );
+    vscode.commands.registerCommand(
+        "nsuts.select_platform",
+        getSelectPlatformHandler(context)
     );
 
     const taskTreeProvider = new TaskTreeDataProvider();
