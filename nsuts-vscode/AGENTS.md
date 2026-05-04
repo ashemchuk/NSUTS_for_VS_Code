@@ -15,6 +15,14 @@ This file provides guidance to agents when working with code in this repository.
   - On 4xx errors, attempts to re-authenticate using stored credentials (but retry logic is incomplete – see TODO).
 - Credentials are stored in VSCode's secret storage (`context.secrets`), not in configuration.
 
+### Multi-Platform Support
+- The extension supports multiple NSUTS platforms (fresh.nsuts.ru, olimpiads.nsuts.ru, custom).
+- Configuration `nsuts.baseUrl` in settings determines the API endpoint.
+- Credentials and cookies are stored per host (keyed by host) to isolate sessions.
+- The command `nsuts.select_platform` opens a QuickPick to switch platforms.
+- When the platform changes, the API client is recreated with the new base URL; existing credentials for the new host are used automatically.
+- Icon URLs in the task tree are generated based on the current base URL's origin.
+
 ### Configuration Storage
 - Active task is stored in workspace configuration under `nsuts.active_task`.
 - Per-task context (files, compiler) is stored under `nsuts.tasks_context`.

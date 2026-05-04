@@ -2,6 +2,7 @@ package ru.ashemchuk.nsutsintellij
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBLabel
@@ -12,12 +13,15 @@ import com.intellij.ui.components.panels.VerticalLayout
 import com.intellij.ui.content.ContentFactory
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
+import com.intellij.ui.JBColor
 import kotlinx.coroutines.runBlocking
 import ru.ashemchuk.nsutsintellij.api.ApiClient
 import ru.ashemchuk.nsutsintellij.api.Task
 import ru.ashemchuk.nsutsintellij.api.TaskTreeModel
 import ru.ashemchuk.nsutsintellij.api.TaskTreeCellRenderer
 import ru.ashemchuk.nsutsintellij.storage.StateRepository
+import ru.ashemchuk.nsutsintellij.PlatformSelectionDialog
+import ru.ashemchuk.nsutsintellij.config.PlatformConfig
 import javax.swing.JButton
 import javax.swing.JSplitPane
 import javax.swing.JTabbedPane
@@ -122,6 +126,21 @@ class NsutsToolWindowFactory : ToolWindowFactory {
                 }
             }
 
+            val platformButton = JButton("Platform").apply {
+                addActionListener {
+                    val platformDialog = PlatformSelectionDialog()
+                    if (platformDialog.showAndGet()) {
+                        logger.info("Platform changed to ${ru.ashemchuk.nsutsintellij.config.PlatformConfig.getBaseUrl()}")
+                        // Show a message that changes may require re-authentication or refresh
+                        com.intellij.openapi.ui.Messages.showInfoMessage(
+                            project,
+                            "Platform changed. Some features may require re-authentication or a refresh of the tool window.",
+                            "Platform Changed"
+                        )
+                    }
+                }
+            }
+
             val refreshButton = JButton("Refresh").apply {
                 addActionListener {
                     taskTreeModel.refresh()
@@ -132,6 +151,7 @@ class NsutsToolWindowFactory : ToolWindowFactory {
 
             val buttonPanel = JBPanel<JBPanel<*>>(HorizontalLayout(JBUI.scale(10))).apply {
                 add(logoutButton)
+                add(platformButton)
                 add(refreshButton)
             }
 
@@ -156,8 +176,21 @@ class NsutsToolWindowFactory : ToolWindowFactory {
                 resizeWeight = 0.5
             }
 
+            // Platform indicator
+            val platformHost = PlatformConfig.getCurrentHost()
+            val platformIndicator = JBLabel("Platform: $platformHost").apply {
+                font = JBFont.small()
+                horizontalAlignment = SwingConstants.CENTER
+                foreground = JBColor.GRAY
+            }
+            val platformIndicatorPanel = JBPanel<JBPanel<*>>(HorizontalLayout(JBUI.scale(10))).apply {
+                add(platformIndicator)
+                border = JBUI.Borders.empty(5, 0)
+            }
+
             content.add(titleLabel)
             content.add(splitPane)
+            content.add(platformIndicatorPanel)
             content.add(buttonPanel)
             
             // Restore active task if any

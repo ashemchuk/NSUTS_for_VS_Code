@@ -34,3 +34,13 @@ This file provides guidance to agents when working with code in this repository.
 - Plugin manifest is at `src/main/resources/META-INF/plugin.xml`.
 - The tool window factory is `NsutsToolWindowFactory`.
 - Authentication logic is stubbed in `AuthDialog.handleAuth`.
+
+## Multi-Platform Support
+- The plugin supports multiple NSUTS platforms (fresh.nsuts.ru, olimpiads.nsuts.ru, custom).
+- Configuration is stored via `PropertiesComponent` with keys prefixed by host.
+- Base URL is configurable via `PlatformConfig.getBaseUrl()` and `PlatformConfig.setBaseUrl()`.
+- Credentials (email, password, cookie) are stored per host using keys `nsuts.email.<host>`, `nsuts.password.<host>`, `nsuts.cookie.<host>`.
+- Legacy keys (`nsuts.email`, `nsuts.password`, `nsuts.cookie`) are used as fallback for backward compatibility.
+- UI: A "Platform" button in the tool window opens `PlatformSelectionDialog` for switching platforms.
+- Platform switching is dynamic but may require re-authentication; the tool window may need a refresh to reflect changes.
+- The `ApiClient` uses the current base URL per request via `defaultRequest` block.

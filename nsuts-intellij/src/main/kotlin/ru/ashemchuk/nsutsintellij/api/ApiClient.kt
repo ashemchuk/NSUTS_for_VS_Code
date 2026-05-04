@@ -2,6 +2,7 @@ package ru.ashemchuk.nsutsintellij.api
 
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.diagnostic.Logger
+import ru.ashemchuk.nsutsintellij.config.PlatformConfig
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -26,10 +27,6 @@ import ru.ashemchuk.nsutsintellij.api.EnterOlympiadRequest
  */
 class ApiClient {
     companion object {
-        private const val BASE_URL = "https://fresh.nsuts.ru/nsuts-new/api/"
-        private const val COOKIE_KEY = "nsuts.cookie"
-        private const val EMAIL_KEY = "nsuts.email"
-        private const val PASSWORD_KEY = "nsuts.password"
         private val logger = Logger.getInstance(ApiClient::class.java)
         private val json = Json {
             ignoreUnknownKeys = true
@@ -43,22 +40,22 @@ class ApiClient {
             json(json)
         }
         defaultRequest {
-            url(BASE_URL)
+            url(PlatformConfig.getBaseUrl())
             contentType(ContentType.Application.Json)
             header(HttpHeaders.Accept, "application/json")
             // Add cookie if present
-            getCookie()?.let { cookie ->
+            PlatformConfig.getCookie()?.let { cookie ->
                 header(HttpHeaders.Cookie, cookie)
             }
         }
     }
 
-    private fun getCookie(): String? = PropertiesComponent.getInstance().getValue(COOKIE_KEY)
-    private fun setCookie(cookie: String?) = PropertiesComponent.getInstance().setValue(COOKIE_KEY, cookie ?: "")
-    private fun getEmail(): String? = PropertiesComponent.getInstance().getValue(EMAIL_KEY)
-    private fun setEmail(email: String?) = PropertiesComponent.getInstance().setValue(EMAIL_KEY, email ?: "")
-    private fun getPassword(): String? = PropertiesComponent.getInstance().getValue(PASSWORD_KEY)
-    private fun setPassword(password: String?) = PropertiesComponent.getInstance().setValue(PASSWORD_KEY, password ?: "")
+    private fun getCookie(): String? = PlatformConfig.getCookie()
+    private fun setCookie(cookie: String?) = PlatformConfig.setCookie(cookie)
+    private fun getEmail(): String? = PlatformConfig.getEmail()
+    private fun setEmail(email: String?) = PlatformConfig.setEmail(email)
+    private fun getPassword(): String? = PlatformConfig.getPassword()
+    private fun setPassword(password: String?) = PlatformConfig.setPassword(password)
 
     /**
      * Perform login with email and password, store cookie.
@@ -128,14 +125,44 @@ class ApiClient {
                 parameter(key, value)
             }
         }
-        return if (response.status.isSuccess()) response.body() else null
+        if (response.status.isSuccess()) {
+            return response.body()
+        } else {
+            logApiError(response, path, "GET")
+            return null
+        }
     }
 
     private suspend inline fun <reified T> post(path: String, body: Any? = null): T? {
         val response: HttpResponse = client.post(path) {
             body?.let { setBody(it) }
         }
-        return if (response.status.isSuccess()) response.body() else null
+        if (response.status.isSuccess()) {
+            return response.body()
+        } else {
+            logApiError(response, path, "POST")
+            return null
+        }
+    }
+
+    private suspend fun logApiError(response: HttpResponse, path: String, method: String) {
+        val status = response.status
+        logger.error("API request failed: $method $path -> $status")
+        // Log response body for debugging
+        val body = try {
+            response.bodyAsText()
+        } catch (e: Exception) {
+            "Unable to read body: ${e.message}"
+        }
+        logger.error("Response body: $body")
+        
+        // If status is 404, suggest platform mismatch
+        if (status == HttpStatusCode.NotFound) {
+            val currentBaseUrl = PlatformConfig.getBaseUrl()
+            val host = PlatformConfig.getCurrentHost()
+            logger.warn("Endpoint not found (404). This may indicate that the selected platform ($host) uses a different API structure.")
+            // Could show a notification, but we'll just log for now.
+        }
     }
 
     // Specific API calls
