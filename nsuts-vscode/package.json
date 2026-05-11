@@ -165,10 +165,10 @@
           "nsuts.baseUrl": {
             "type": "string",
             "default": "https://fresh.nsuts.ru/nsuts-new/api/",
-            "description": "Base URL of NSUTS API. You can choose between fresh.nsuts and olimpiads.nsuts, or enter a custom URL.",
+            "description": "Base URL of NSUTS API. You can choose between fresh.nsuts and olympic.nsu, or enter a custom URL.",
             "enum": [
               "https://fresh.nsuts.ru/nsuts-new/api/",
-              "https://olimpiads.nsuts.ru/nsuts-new/api/"
+              "https://olympic.nsu.ru/nsuts-new/api/"
             ]
           },
           "nsuts.active_task": {

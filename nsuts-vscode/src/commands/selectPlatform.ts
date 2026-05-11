@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { setBaseUrl, getBaseUrl } from "../config";
+import { performLogout } from "./logout";
 
 const PREDEFINED_URLS = [
     {
@@ -8,9 +9,9 @@ const PREDEFINED_URLS = [
         url: "https://fresh.nsuts.ru/nsuts-new/api/",
     },
     {
-        label: "olimpiads.nsuts",
-        description: "https://olimpiads.nsuts.ru/nsuts-new/api/",
-        url: "https://olimpiads.nsuts.ru/nsuts-new/api/",
+        label: "olympic.nsu",
+        description: "https://olympic.nsu.ru/nsuts-new/api/",
+        url: "https://olympic.nsu.ru/nsuts-new/api/",
     },
     {
         label: "Custom URL...",
@@ -66,12 +67,17 @@ export function getSelectPlatformHandler(context: vscode.ExtensionContext) {
             return;
         }
 
+        // Logout before switching platforms to ensure clean state
+        // but delay tree refresh until after baseUrl is switched.
+        await performLogout(context, { refreshTree: false });
+
         await setBaseUrl(newUrl);
         vscode.window.showInformationMessage(
-            `Platform changed to ${newUrl}. Some features may require re-authentication.`
+            `Platform changed to ${newUrl}. Please re-authenticate.`
         );
 
-        // Optionally clear the current client to force re-creation
-        // (implementation depends on client refresh mechanism)
+        await vscode.commands.executeCommand("nsuts.refresh_task_tree");
+
+        // The client will automatically refresh on next use due to baseUrl tracking in getClient()
     };
 }

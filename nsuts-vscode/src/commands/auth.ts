@@ -1,12 +1,24 @@
 import * as vscode from "vscode";
 
-import { client } from "../api/client";
+import { getClient } from "../api/client";
+import { getBaseUrl } from "../config";
 import { PathsLoginPostRequestBodyApplicationJsonMethod } from "../api/api";
+
+function getSecretKeysForCurrentHost() {
+    const host = new URL(getBaseUrl()).host;
+    return {
+        emailKey: `nsuts.email.${host}`,
+        passwordKey: `nsuts.password.${host}`,
+        cookieKey: `nsuts.cookie.${host}`,
+    };
+}
 
 export async function getAuthCookie(
     email: string,
-    password: string
+    password: string,
+    context?: vscode.ExtensionContext
 ): Promise<string> {
+    const client = getClient(context);
     const { response } = await client.POST("/login", {
         body: {
             email,
@@ -28,11 +40,12 @@ export function getAuthHandler(context: vscode.ExtensionContext) {
     return async function () {
         const { email, password } = await getAuthData();
 
-        const cookie = await getAuthCookie(email, password);
+        const cookie = await getAuthCookie(email, password, context);
+        const { emailKey, passwordKey, cookieKey } = getSecretKeysForCurrentHost();
 
-        await context.secrets.store("nsuts.email", email);
-        await context.secrets.store("nsuts.password", password);
-        await context.secrets.store("nsuts.cookie", cookie);
+        await context.secrets.store(emailKey, email);
+        await context.secrets.store(passwordKey, password);
+        await context.secrets.store(cookieKey, cookie);
 
         vscode.window.showInformationMessage(
             "Authorization completed successful!"

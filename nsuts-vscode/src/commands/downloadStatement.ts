@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { client } from "../api/client";
+import { getClient } from "../api/client";
 import { getBaseUrl } from "../config";
 
 export function getDownloadStatementHandler(context: vscode.ExtensionContext) {
@@ -9,6 +9,7 @@ export function getDownloadStatementHandler(context: vscode.ExtensionContext) {
         }
 
         try {
+            const client = getClient(context);
             // Переходим в контекст тура
             await client.GET("/tours/enter", {
                 params: { query: { tour: Number(node.tourId) } },

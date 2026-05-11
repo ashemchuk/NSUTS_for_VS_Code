@@ -6,8 +6,9 @@ import {
     EventEmitter,
     Event,
     ThemeIcon,
+    ExtensionContext,
 } from "vscode";
-import { client } from "../api/client";
+import { getClient } from "../api/client";
 import { ReportStatus } from "../api/api";
 import { getBaseUrl } from "../config";
 
@@ -70,7 +71,11 @@ export class TaskTreeItem extends TreeItem {
 type Item = OlympiadTreeItem | TourTreeItem | TaskTreeItem;
 
 export class TaskTreeDataProvider implements TreeDataProvider<Item> {
-    constructor() {}
+    private context: ExtensionContext | undefined;
+
+    constructor(context?: ExtensionContext) {
+        this.context = context;
+    }
     private _onDidChangeTreeData: EventEmitter<Item | undefined | null | void> =
         new EventEmitter<Item | undefined | null | void>();
     readonly onDidChangeTreeData: Event<Item | undefined | null | void> =
@@ -101,13 +106,14 @@ export class TaskTreeDataProvider implements TreeDataProvider<Item> {
     private async getTours(
         olympiad: OlympiadTreeItem
     ): Promise<TourTreeItem[]> {
+        const client = getClient(this.context);
         const enterOlympiad = await client.POST("/olympiads/enter", {
             body: { olympiad: olympiad.olympiadId },
         });
-        if (enterOlympiad.error) return [];
+        if (enterOlympiad.error) {return [];}
 
         const toursRes = await client.GET("/tours/list");
-        if (!toursRes.data?.tours) return [];
+        if (!toursRes.data?.tours) {return [];}
 
         const result: TourTreeItem[] = [];
 
@@ -154,6 +160,7 @@ export class TaskTreeDataProvider implements TreeDataProvider<Item> {
     }
 
     private async getTasks(tour: TourTreeItem) {
+        const client = getClient(this.context);
         await client.GET("/tours/enter", {
             params: { query: { tour: Number(tour.tourId) } },
         });
@@ -179,6 +186,7 @@ export class TaskTreeDataProvider implements TreeDataProvider<Item> {
     }
 
     private async getOlympiads() {
+        const client = getClient(this.context);
         const { data } = await client.GET("/olympiads/list");
         return data?.registeredTo?.map(
             ({ id, title, cover_url }) =>

@@ -1,7 +1,7 @@
 import createClient, { Middleware, Client } from "openapi-fetch";
 import type { paths } from "./api";
 import { ExtensionContext } from "vscode";
-import { getAuthCookie, getAuthData } from "../commands/auth";
+import { getAuthCookie } from "../commands/auth";
 import { getBaseUrl } from "../config";
 
 /**
@@ -44,9 +44,7 @@ function createApiClient(
                     }
 
                     if (!email || !password) {
-                        const data = await getAuthData();
-                        email = data.email;
-                        password = data.password;
+                        return response;
                     }
 
                     try {
@@ -71,18 +69,20 @@ function createApiClient(
  */
 let globalClient: Client<paths> | null = null;
 let globalContext: ExtensionContext | null = null;
+let lastBaseUrl: string | null = null;
 
 export function getClient(context?: ExtensionContext): Client<paths> {
     const baseUrl = getBaseUrl();
-    if (!globalClient || globalContext !== context) {
+    if (!globalClient || globalContext !== context || lastBaseUrl !== baseUrl) {
         globalClient = createApiClient(baseUrl, context);
         globalContext = context || null;
+        lastBaseUrl = baseUrl;
     }
     return globalClient;
 }
 
 /**
- * @deprecated Use `getClient()` instead.
+ * @deprecated Use `getClient()` instead. Use getClient() to get proper client instance.
  */
 export const client = createApiClient(getBaseUrl());
 

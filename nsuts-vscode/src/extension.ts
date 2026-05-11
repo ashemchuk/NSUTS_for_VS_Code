@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { TaskTreeDataProvider } from "./views/taskTreeView";
-import { client, registerAuthMiddleware } from "./api/client";
+import { registerAuthMiddleware } from "./api/client";
 import { getAuthHandler } from "./commands/auth";
 import { getSubmitHandler } from "./commands/submit";
 import { getSelectFilesHandler } from "./commands/selectFiles";
@@ -14,15 +14,27 @@ import { getRefreshTaskTreeHandler } from "./commands/refreshTaskTree";
 import { getDownloadStatementHandler } from "./commands/downloadStatement";
 import { getSubmitIssueHandler } from "./commands/submitIssue";
 import { getSelectPlatformHandler } from "./commands/selectPlatform";
+import { getBaseUrl } from "./config";
+
+function getAuthKeysForCurrentHost() {
+    const host = new URL(getBaseUrl()).host;
+    return {
+        emailKey: `nsuts.email.${host}`,
+        passwordKey: `nsuts.password.${host}`,
+    };
+}
 
 export function activate(context: vscode.ExtensionContext) {
     registerAuthMiddleware(context);
 
     context.secrets.keys().then((keys) => {
+        const { emailKey, passwordKey } = getAuthKeysForCurrentHost();
+        const hasHostAuth = keys.includes(emailKey) && keys.includes(passwordKey);
+        const hasLegacyAuth = keys.includes("nsuts.email") && keys.includes("nsuts.password");
         vscode.commands.executeCommand(
             "setContext",
             "nsuts.authorized",
-            keys.includes("nsuts.email") && keys.includes("nsuts.password")
+            hasHostAuth || hasLegacyAuth
         );
     });
 
@@ -56,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
         getSelectPlatformHandler(context)
     );
 
-    const taskTreeProvider = new TaskTreeDataProvider();
+    const taskTreeProvider = new TaskTreeDataProvider(context);
     vscode.window.registerTreeDataProvider("task-tree", taskTreeProvider);
     vscode.commands.registerCommand(
         "nsuts.refresh_task_tree",
