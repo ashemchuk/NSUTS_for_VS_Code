@@ -19,7 +19,7 @@ export async function getAuthCookie(
     context?: vscode.ExtensionContext
 ): Promise<string> {
     const client = getClient(context);
-    const { response } = await client.POST("/login", {
+    const { response, error } = await client.POST("/login", {
         body: {
             email,
             password,
@@ -27,10 +27,24 @@ export async function getAuthCookie(
         },
     });
 
-    const cookie = response.headers.getSetCookie().at(0);
+    if (error) {
+        const err = error as any;
+        throw new Error(
+            `Authentication failed: ${err.error || err.status || err.message || 'Unknown error'}`
+        );
+    }
+
+    if (!response.ok) {
+        throw new Error(`Authentication failed with status ${response.status}`);
+    }
+
+    const setCookie = response.headers.getSetCookie();
+    const cookie = setCookie?.at(0);
 
     if (!cookie) {
-        throw new Error("Login or password is not correct");
+        throw new Error(
+            "Login or password is not correct (no cookie received)"
+        );
     }
 
     return cookie;
@@ -41,7 +55,8 @@ export function getAuthHandler(context: vscode.ExtensionContext) {
         const { email, password } = await getAuthData();
 
         const cookie = await getAuthCookie(email, password, context);
-        const { emailKey, passwordKey, cookieKey } = getSecretKeysForCurrentHost();
+        const { emailKey, passwordKey, cookieKey } =
+            getSecretKeysForCurrentHost();
 
         await context.secrets.store(emailKey, email);
         await context.secrets.store(passwordKey, password);

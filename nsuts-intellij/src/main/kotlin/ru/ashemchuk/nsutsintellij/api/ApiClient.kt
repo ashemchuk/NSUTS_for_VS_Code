@@ -89,11 +89,9 @@ class ApiClient {
             return false
         }
         // Store credentials and cookie
-        runBlocking {
-            setEmail(email)
-            setPassword(password)
-            setCookie(cookie)
-        }
+        setEmail(email)
+        setPassword(password)
+        setCookie(cookie)
         logger.warn("Login successful for $email")
         return true
     }
@@ -102,11 +100,9 @@ class ApiClient {
      * Logout by clearing stored credentials and cookie.
      */
     suspend fun logout() {
-        runBlocking {
-            setEmail(null)
-            setPassword(null)
-            setCookie(null)
-        }
+        setEmail(null)
+        setPassword(null)
+        setCookie(null)
         client.post("logout")
         logger.info("Logged out")
     }
@@ -115,7 +111,7 @@ class ApiClient {
      * Check if user is authenticated (has cookie).
      */
     fun isAuthenticated(): Boolean {
-        return getCookie()?.isNotBlank() ?: false
+        return !getCookie().isNullOrBlank()
     }
 
     // Generic request methods (private to avoid inline exposure)
@@ -265,7 +261,7 @@ class ApiClient {
             logger.warn("Submit: id=${submit.id}, task_id=${submit.task_id}, status=${submit.status}")
         }
         return response?.submits
-            ?.filter { it.task_id == taskId }
+            ?.filter { it.task_id.toString() == taskId }
             ?.map { it.toReport() }
     }
 

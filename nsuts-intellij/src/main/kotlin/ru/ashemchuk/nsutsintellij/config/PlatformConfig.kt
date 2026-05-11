@@ -58,7 +58,7 @@ object PlatformConfig {
 
     fun setCookie(cookie: String?, host: String? = null) {
         val h = host ?: getCurrentHost()
-        PropertiesComponent.getInstance().setValue(cookieKey(h), cookie ?: "")
+        PropertiesComponent.getInstance().setValue(cookieKey(h), cookie)
     }
 
     fun getEmail(host: String? = null): String? {
@@ -69,7 +69,7 @@ object PlatformConfig {
 
     fun setEmail(email: String?, host: String? = null) {
         val h = host ?: getCurrentHost()
-        PropertiesComponent.getInstance().setValue(emailKey(h), email ?: "")
+        PropertiesComponent.getInstance().setValue(emailKey(h), email)
     }
 
     fun getPassword(host: String? = null): String? {
@@ -80,7 +80,7 @@ object PlatformConfig {
 
     fun setPassword(password: String?, host: String? = null) {
         val h = host ?: getCurrentHost()
-        PropertiesComponent.getInstance().setValue(passwordKey(h), password ?: "")
+        PropertiesComponent.getInstance().setValue(passwordKey(h), password)
     }
 
     /**

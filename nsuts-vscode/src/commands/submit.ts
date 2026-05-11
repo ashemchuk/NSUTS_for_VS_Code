@@ -67,7 +67,7 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                     const { error } = await client.POST("/submit/do_submit", {
                         body: {
                             langId: compiler,
-                            sourceText: Buffer.from(text).toString("utf-8"),
+                            sourceText: new TextDecoder().decode(text),
                             taskId: activeTask.taskId,
                         },
                         bodySerializer(body) {
@@ -83,20 +83,20 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                     });
 
                     if (error) {
-                        // @ts-ignore TODO: add 400 error in openapi spec
-                        vscode.window.showErrorMessage(error.error);
+                        const err = error as any;
+                        vscode.window.showErrorMessage(
+                            err.error || err.message || "Submission failed"
+                        );
                         return;
                     }
                 } else {
                     const zip = new JSZip();
                     await Promise.all(
                         files.map(async (file) => {
-                            const text = Buffer.from(
-                                await vscode.workspace.fs.readFile(
-                                    vscode.Uri.file(file)
-                                )
+                            const data = await vscode.workspace.fs.readFile(
+                                vscode.Uri.file(file)
                             );
-                            zip.file(path.basename(file), text);
+                            zip.file(path.basename(file), data);
                         })
                     );
                     const { error } = await client.POST("/submit/do_submit", {
@@ -121,8 +121,10 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                     });
 
                     if (error) {
-                        // @ts-ignore TODO: add 400 error in openapi spec
-                        vscode.window.showErrorMessage(error.error);
+                        const err = error as any;
+                        vscode.window.showErrorMessage(
+                            err.error || err.message || "Submission failed"
+                        );
                         return;
                     }
                 }
@@ -135,7 +137,10 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
     };
 }
 
-async function getReport(activeTask: ActiveTask, context?: vscode.ExtensionContext) {
+async function getReport(
+    activeTask: ActiveTask,
+    context?: vscode.ExtensionContext
+) {
     const report = await pollResolvedReports(activeTask, context);
     if (report.status === ReportStatus.Unsuccessful) {
         updateSolutionResultStatus(report.result_line);
@@ -144,7 +149,10 @@ async function getReport(activeTask: ActiveTask, context?: vscode.ExtensionConte
         updateSolutionResultStatus("Accepted!");
     }
     vscode.window.showInformationMessage(
-        "Результат по задаче " + activeTask.name + " : " + translationReportResult(report.result_line)
+        "Результат по задаче " +
+            activeTask.name +
+            " : " +
+            translationReportResult(report.result_line)
     );
 }
 
@@ -152,7 +160,7 @@ function translationReportResult(status: string) {
     if (/^A+$/.test(status)) {
         return "🏆 ACCEPTED!";
     }
-    if (status == "C") {
+    if (status === "C") {
         return "🚧 Compile Error";
     }
     if (/^A*W$/.test(status)) {
@@ -186,7 +194,10 @@ function translationReportResult(status: string) {
     return status;
 }
 
-async function pollResolvedReports(activeTask: ActiveTask, context?: vscode.ExtensionContext) {
+async function pollResolvedReports(
+    activeTask: ActiveTask,
+    context?: vscode.ExtensionContext
+) {
     for (let i = 0, t = 1500; ; i++) {
         if (i > 25) {
             throw new Error("Report check timeout");
@@ -204,7 +215,7 @@ async function pollResolvedReports(activeTask: ActiveTask, context?: vscode.Exte
             throw new Error("Couldn't fetch result");
         }
         const reports = res.data.submits?.filter(
-            (rep: any) => rep.task_id === activeTask.taskId
+            (rep: any) => String(rep.task_id) === activeTask.taskId
         );
         if (!reports || reports.length < 1) {
             throw new Error("There're not any reports");
@@ -218,6 +229,6 @@ async function pollResolvedReports(activeTask: ActiveTask, context?: vscode.Exte
         ) {
             return report;
         }
-        t = t > 15000 ? t : t * 2;
+        t = Math.min(t * 2, 15000);
     }
 }
