@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
 
-import { client } from "../api/client";
+import { getClient } from "../api/client";
 import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
 import { TasksContextRepository } from "../repositories/tasksContextRepository";
 import { ActiveTask } from "../types";
 
-export async function getCompilers({ tourId, olympiadId }: ActiveTask) {
+export async function getCompilers({ tourId, olympiadId }: ActiveTask, context?: vscode.ExtensionContext) {
+    const client = getClient(context);
     await client.POST("/olympiads/enter", {
         body: { olympiad: olympiadId },
     });
@@ -34,7 +35,7 @@ export function getSelectCompilerHandler(context: vscode.ExtensionContext) {
             return;
         }
 
-        let compilers = await getCompilers(activeTask).catch(async (err) => {
+        let compilers = await getCompilers(activeTask, context).catch(async (err) => {
             vscode.window.showErrorMessage(
                 "Ошибка загрузки списка компиляторов: " + err.message
             );

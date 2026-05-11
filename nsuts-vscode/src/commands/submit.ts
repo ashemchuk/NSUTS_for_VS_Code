@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import JSZip from "jszip";
 import * as path from "node:path";
 
-import { client } from "../api/client";
+import { getClient } from "../api/client";
 import { ActiveTask, TasksContext } from "../types";
 import { updateSolutionResultStatus } from "../statusBar/solutionResult";
 import { ActiveTaskRepository } from "../repositories/activeTaskRepository";
@@ -57,6 +57,7 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                     () => process.report({ increment: 2.5 }),
                     250
                 );
+                const client = getClient(context);
 
                 if (files.length === 1) {
                     const text = await vscode.workspace.fs.readFile(
@@ -126,7 +127,7 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
                     }
                 }
 
-                await getReport(activeTask);
+                await getReport(activeTask, context);
 
                 clearInterval(progressInterval);
             }
@@ -134,8 +135,8 @@ export function getSubmitHandler(context: vscode.ExtensionContext) {
     };
 }
 
-async function getReport(activeTask: ActiveTask) {
-    const report = await pollResolvedReports(activeTask);
+async function getReport(activeTask: ActiveTask, context?: vscode.ExtensionContext) {
+    const report = await pollResolvedReports(activeTask, context);
     if (report.status === ReportStatus.Unsuccessful) {
         updateSolutionResultStatus(report.result_line);
     }
@@ -185,12 +186,13 @@ function translationReportResult(status: string) {
     return status;
 }
 
-async function pollResolvedReports(activeTask: ActiveTask) {
+async function pollResolvedReports(activeTask: ActiveTask, context?: vscode.ExtensionContext) {
     for (let i = 0, t = 1500; ; i++) {
         if (i > 25) {
             throw new Error("Report check timeout");
         }
         await new Promise((resolve) => setTimeout(resolve, t));
+        const client = getClient(context);
         await client.POST("/olympiads/enter", {
             body: { olympiad: activeTask.olympiadId },
         });
@@ -202,12 +204,12 @@ async function pollResolvedReports(activeTask: ActiveTask) {
             throw new Error("Couldn't fetch result");
         }
         const reports = res.data.submits?.filter(
-            (rep) => rep.task_id === activeTask.taskId
+            (rep: any) => rep.task_id === activeTask.taskId
         );
         if (!reports || reports.length < 1) {
             throw new Error("There're not any reports");
         }
-        const report = reports.reduce((acc, cur) =>
+        const report = reports.reduce((acc: any, cur: any) =>
             Number(acc.id) > Number(cur.id) ? acc : cur
         );
         if (
