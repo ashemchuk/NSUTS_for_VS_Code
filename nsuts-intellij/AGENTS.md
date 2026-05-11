@@ -36,7 +36,7 @@ This file provides guidance to agents when working with code in this repository.
 - Authentication logic is stubbed in `AuthDialog.handleAuth`.
 
 ## Multi-Platform Support
-- The plugin supports multiple NSUTS platforms (fresh.nsuts.ru, olimpiads.nsuts.ru, custom).
+- The plugin supports multiple NSUTS platforms (fresh.nsuts.ru, olympic.nsu.ru, custom).
 - Configuration is stored via `PropertiesComponent` with keys prefixed by host.
 - Base URL is configurable via `PlatformConfig.getBaseUrl()` and `PlatformConfig.setBaseUrl()`.
 - Credentials (email, password, cookie) are stored per host using keys `nsuts.email.<host>`, `nsuts.password.<host>`, `nsuts.cookie.<host>`.

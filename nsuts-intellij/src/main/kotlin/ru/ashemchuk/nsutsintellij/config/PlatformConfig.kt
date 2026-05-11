@@ -103,9 +103,9 @@ object PlatformConfig {
             url = "https://fresh.nsuts.ru/nsuts-new/api/"
         ),
         PlatformEntry(
-            label = "olimpiads.nsuts",
-            description = "https://olimpiads.nsuts.ru/nsuts-new/api/",
-            url = "https://olimpiads.nsuts.ru/nsuts-new/api/"
+            label = "olympic.nsu",
+            description = "https://olympic.nsu.ru/nsuts-new/api/",
+            url = "https://olympic.nsu.ru/nsuts-new/api/"
         ),
         PlatformEntry(
             label = "Custom URL...",
