@@ -12,13 +12,7 @@ In terms of Olympiad programming, every minute counts — the time spent on tech
 
 - In-IDE Authorization
 - View available tasks, tours, and Olympiads
-- View the leaderboard
 - An attempt at a solution:
   - Download the solution from a single file
   - Download a solution from multiple files
 - View and select available compilers
-- Viewing the attempt report
-- View the history of attempts
-- View the text of In-IDE tasks
-- View and send questions to the organizers on tasks
-- FAQ tab as on the website
